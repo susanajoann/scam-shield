@@ -624,19 +624,10 @@ export default function QuizScreen({
           isHardMode={false}
         />
         <Spacer h={8} />
-        <div style={styles.questionHeader}>
-          <p style={styles.questionCounter}>
-            {/* TEXT_QUESTION_OF drives both the label and the speech */}
-            {currentScam.icon} {currentScam.name} — {TEXT_QUESTION_OF}{" "}
-            {questionIndex + 1} of {questions.length}
-          </p>
-          <SpeakButton
-            onClick={() =>
-              speak(buildQuestionScript(currentQuestion, shuffledOptions))
-            }
-            label={TEXT_SPEAK_LABEL_QUESTION}
-          />
-        </div>
+        <p style={styles.questionCounter}>
+          {currentScam.icon} {currentScam.name} — {TEXT_QUESTION_OF}{" "}
+          {questionIndex + 1} of {questions.length}
+        </p>
         <Spacer h={16} />
         <div style={styles.questionBox}>
           {/* currentQuestion.question comes from scamData.js */}
@@ -690,31 +681,14 @@ export default function QuizScreen({
               background: selectedOption?.correct ? "#D8F3DC" : "#FADADD",
             }}
           >
-            <div style={styles.feedbackHeader}>
-              <p
-                style={{
-                  ...styles.feedbackResult,
-                  color: selectedOption?.correct ? "#1B4332" : "#6B1020",
-                }}
-              >
-                {/* TEXT_CORRECT / TEXT_NOT_QUITE drive both display and speech */}
-                {selectedOption?.correct ? TEXT_CORRECT : TEXT_NOT_QUITE}
-              </p>
-              {/* This button always speaks on tap regardless of auto-read */}
-              <SpeakButton
-                onClick={() => {
-                  const correctOption = shuffledOptions.find((o) => o.correct);
-                  speak(
-                    buildFeedbackScript(
-                      selectedOption?.correct,
-                      currentQuestion.explanation,
-                      correctOption?.text ?? "",
-                    ),
-                  );
-                }}
-                label={TEXT_SPEAK_LABEL_FEEDBACK}
-              />
-            </div>
+            <p
+              style={{
+                ...styles.feedbackResult,
+                color: selectedOption?.correct ? "#1B4332" : "#6B1020",
+              }}
+            >
+              {selectedOption?.correct ? TEXT_CORRECT : TEXT_NOT_QUITE}
+            </p>
             <Spacer h={6} />
             {/* currentQuestion.explanation comes from scamData.js */}
             <p style={styles.feedbackExplanation}>
