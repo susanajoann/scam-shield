@@ -517,25 +517,51 @@ function Wrapper({ children }) {
 function Logo({ small }) {
   return (
     <div>
-      <p style={{
-        fontSize: small ? 20 : 28,
-        fontWeight: 700,
-        color: "#1A3C5E",
-        margin: 0,
-        letterSpacing: "-0.5px",
-        fontFamily: "'Georgia', serif",
-      }}>
-        🛡️ {TEXT_APP_NAME}
-      </p>
-      {!small && (
+      {small ? (
+        // Small version — just the wordmark text, no tagline
         <p style={{
-          fontSize: 15,
-          color: "#666",
-          margin: "6px 0 0",
-          fontFamily: "sans-serif",
+          fontSize: 24,
+          fontWeight: 700,
+          color: "#3D1580",
+          margin: 0,
+          fontFamily: "Georgia, serif",
+          letterSpacing: "-0.5px",
         }}>
-          {TEXT_APP_SUBTITLE}
+          <span style={{ color: "#3D1580" }}>Scam</span>
+          <span style={{ color: "#C8952A" }}>Savvy</span>
         </p>
+      ) : (
+        // Full version — large wordmark with tagline and gold rule
+        <div>
+          <p style={{
+            fontSize: 48,
+            fontWeight: 700,
+            color: "#3D1580",
+            margin: 0,
+            fontFamily: "Georgia, serif",
+            letterSpacing: "-1px",
+            lineHeight: 1,
+          }}>
+            <span style={{ color: "#3D1580" }}>Scam</span>
+            <span style={{ color: "#C8952A" }}>Savvy</span>
+          </p>
+          <div style={{
+            height: 2,
+            background: "#C8952A",
+            opacity: 0.5,
+            margin: "8px 0 6px",
+            width: "100%",
+          }} />
+          <p style={{
+            fontSize: 12,
+            color: "#7A5FAA",
+            margin: 0,
+            fontFamily: "sans-serif",
+            letterSpacing: "2.5px",
+          }}>
+            KNOW THE SCAM BEFORE IT KNOWS YOU
+          </p>
+        </div>
       )}
     </div>
   );
