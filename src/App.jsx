@@ -9,7 +9,7 @@
 // between the quiz and the analytics dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import HomeScreen from "./homeScreen";
 import QuizScreen from "./quizScreen";
@@ -17,34 +17,41 @@ import AnalyticsPage from "./AnalyticsPage";
 
 // ─── Nav bar ─────────────────────────────────────────────────────────────────
 
-function NavBar() {
+function NavBar({ onLogoClick }) {
   return (
-    <nav style={{
-      width: "100%",
-      boxSizing: "border-box",
-      background: "#fff",
-      borderBottom: "2px solid #E8E0F5",
-      padding: "0 clamp(12px, 4vw, 48px)",
-      display: "flex",
-      alignItems: "center",
-      flexWrap: "wrap",
-      gap: 0,
-      position: "sticky",
-      top: 0,
-      zIndex: 100,
-    }}>
+    <nav
+      style={{
+        width: "100%",
+        boxSizing: "border-box",
+        background: "#fff",
+        borderBottom: "2px solid #E8E0F5",
+        padding: "0 clamp(12px, 4vw, 48px)",
+        display: "flex",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: 0,
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+      }}
+    >
       {/* Logo — takes up full row on very small screens */}
-      <NavLink to="/" style={{
-        textDecoration: "none",
-        marginRight: "auto",
-        padding: "14px 0",
-      }}>
-        <span style={{
-          fontSize: "clamp(20px, 4vw, 24px)",
-          fontWeight: 700,
-          fontFamily: "Georgia, serif",
-          letterSpacing: "-0.5px",
-        }}>
+      <NavLink
+        to='/'
+        style={{
+          textDecoration: "none",
+          marginRight: "auto",
+          padding: "14px 0",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "clamp(20px, 4vw, 24px)",
+            fontWeight: 700,
+            fontFamily: "Georgia, serif",
+            letterSpacing: "-0.5px",
+          }}
+        >
           <span style={{ color: "#3D1580" }}>Scam</span>
           <span style={{ color: "#C8952A" }}>Savvy</span>
         </span>
@@ -52,7 +59,7 @@ function NavBar() {
 
       {/* Quiz tab */}
       <NavLink
-        to="/"
+        to='/'
         end
         style={({ isActive }) => ({
           padding: "16px clamp(10px, 3vw, 20px)",
@@ -61,7 +68,9 @@ function NavBar() {
           fontWeight: 600,
           color: isActive ? "#3D1580" : "#7A5FAA",
           textDecoration: "none",
-          borderBottom: isActive ? "3px solid #3D1580" : "3px solid transparent",
+          borderBottom: isActive
+            ? "3px solid #3D1580"
+            : "3px solid transparent",
           transition: "color 0.15s, border-color 0.15s",
           whiteSpace: "nowrap",
         })}
@@ -71,7 +80,7 @@ function NavBar() {
 
       {/* Analytics tab */}
       <NavLink
-        to="/analytics"
+        to='/analytics'
         style={({ isActive }) => ({
           padding: "16px clamp(10px, 3vw, 20px)",
           fontSize: "clamp(14px, 3.5vw, 16px)",
@@ -79,7 +88,9 @@ function NavBar() {
           fontWeight: 600,
           color: isActive ? "#3D1580" : "#7A5FAA",
           textDecoration: "none",
-          borderBottom: isActive ? "3px solid #C8952A" : "3px solid transparent",
+          borderBottom: isActive
+            ? "3px solid #C8952A"
+            : "3px solid transparent",
           transition: "color 0.15s, border-color 0.15s",
           whiteSpace: "nowrap",
         })}
@@ -92,18 +103,29 @@ function NavBar() {
 
 // ─── Quiz flow (home + quiz screens) ─────────────────────────────────────────
 
-function QuizFlow() {
+// resetRef lets the NavBar trigger a reset to the landing screen from outside
+// QuizFlow without needing to lift all state up to App.
+function QuizFlow({ resetRef }) {
   const [screen, setScreen] = useState("home");
   const [quizProps, setQuizProps] = useState(null);
 
-  const handleStart = (difficulty, shuffledScams, ageRange, sessionId, startedAt) => {
-    setQuizProps({ difficulty, shuffledScams, ageRange, sessionId, startedAt });
-    setScreen("quiz");
-  };
-
-  const handlePlayAgain = () => {
+  const goHome = () => {
     setQuizProps(null);
     setScreen("home");
+  };
+
+  // Expose goHome so the NavBar logo can call it
+  if (resetRef) resetRef.current = goHome;
+
+  const handleStart = (
+    difficulty,
+    shuffledScams,
+    ageRange,
+    sessionId,
+    startedAt,
+  ) => {
+    setQuizProps({ difficulty, shuffledScams, ageRange, sessionId, startedAt });
+    setScreen("quiz");
   };
 
   if (screen === "home") {
@@ -118,8 +140,8 @@ function QuizFlow() {
         ageRange={quizProps.ageRange}
         sessionId={quizProps.sessionId}
         startedAt={quizProps.startedAt}
-        onPlayAgain={handlePlayAgain}
-        onHome={handlePlayAgain}
+        onPlayAgain={goHome}
+        onHome={goHome}
       />
     );
   }
@@ -130,12 +152,15 @@ function QuizFlow() {
 // ─── Root app ─────────────────────────────────────────────────────────────────
 
 export default function App() {
+  // A ref lets the NavBar call goHome() inside QuizFlow without prop drilling
+  const quizResetRef = useRef(null);
+
   return (
     <BrowserRouter>
-      <NavBar />
+      <NavBar onLogoClick={() => quizResetRef.current?.()} />
       <Routes>
-        <Route path="/" element={<QuizFlow />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path='/' element={<QuizFlow resetRef={quizResetRef} />} />
+        <Route path='/analytics' element={<AnalyticsPage />} />
       </Routes>
     </BrowserRouter>
   );
