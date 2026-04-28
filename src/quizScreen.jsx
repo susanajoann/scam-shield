@@ -472,16 +472,7 @@ export default function QuizScreen({
     // Only speak immediately if auto-read is off.
     // When auto-read is on, the useEffect watching showFeedback handles it
     // after a short delay — speaking here too would cause double-speaking.
-    if (!getAutoRead()) {
-      const correctOption = shuffledOptions.find((o) => o.correct);
-      speak(
-        buildFeedbackScript(
-          correct,
-          currentQuestion.explanation,
-          correctOption?.text ?? "",
-        ),
-      );
-    }
+
     await recordAnswer(sessionId, {
       scamId: currentScam.id,
       questionId: currentQuestion.id,

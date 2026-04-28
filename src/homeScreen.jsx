@@ -297,9 +297,18 @@ export default function HomeScreen({ onStart, readScriptRef }) {
     const handleStart = async () => {
       if (!selectedDifficulty || starting) return;
       setStarting(true);
-      const sessionId = await createSession(selectedDifficulty, ageRange);
+      const { sessionId, startedAt } = await createSession(
+        selectedDifficulty,
+        ageRange,
+      );
       const shuffledScams = shuffle(SCAMS);
-      onStart(selectedDifficulty, shuffledScams, ageRange, sessionId);
+      onStart(
+        selectedDifficulty,
+        shuffledScams,
+        ageRange,
+        sessionId,
+        startedAt,
+      );
     };
 
     return (
