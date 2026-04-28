@@ -309,41 +309,6 @@ export default function AnalyticsPage() {
       ) : null}
 
       <Divider />
-
-      {/* ── Raw sessions table ── */}
-      <SectionTitle>Recent sessions</SectionTitle>
-      <p style={s.chartCaption}>Most recent 20 sessions.</p>
-      <div style={s.tableWrapper}>
-        <table style={s.table}>
-          <thead>
-            <tr>
-              {["Session ID", "Age range", "Difficulty", "Completed", "Total time (s)"].map(h => (
-                <th key={h} style={s.th}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...sessions]
-              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-              .slice(0, 20)
-              .map((sess, i) => (
-                <tr key={i} style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}>
-                  <td style={s.td}>{sess.session_id?.slice(0, 8)}…</td>
-                  <td style={s.td}>{sess.age_range ?? "—"}</td>
-                  <td style={s.td}>{sess.difficulty ?? "—"}</td>
-                  <td style={{ ...s.td, color: sess.completed ? GREEN : RED, fontWeight: 600 }}>
-                    {sess.completed ? "Yes" : "No"}
-                  </td>
-                  <td style={s.td}>{sess.total_time ?? "—"}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p style={s.footer}>
-        All data is anonymous. No personal information is stored or displayed.
-      </p>
     </PageWrapper>
   );
 }
