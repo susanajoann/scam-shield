@@ -376,18 +376,26 @@ export default function HomeScreen({ onStart, readScriptRef }) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Wrapper({ children }) {
+function Wrapper({ children, onHome }) {
   return (
     <div
       style={{
         width: "100%",
         maxWidth: "100vw",
         boxSizing: "border-box",
-        padding: "32px clamp(16px, 5vw, 64px) 60px",
+        overflowX: "hidden",
         fontFamily: "'Georgia', serif",
       }}
     >
-      {children}
+      <div
+        style={{
+          padding: "24px clamp(14px, 4vw, 64px) 60px",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }

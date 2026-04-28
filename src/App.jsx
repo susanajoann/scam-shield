@@ -122,6 +122,7 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
       style={{
         width: "100%",
         boxSizing: "border-box",
+        overflowX: "hidden",
         background: "#fff",
         borderBottom: "2px solid #E8E0F5",
         padding: "0 clamp(12px, 4vw, 48px)",
@@ -142,6 +143,8 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
           marginRight: "auto",
           padding: "12px 0",
           display: "flex",
+          minWidth: 0,
+          overflow: "hidden",
           flexDirection: "column",
           gap: 3,
         }}

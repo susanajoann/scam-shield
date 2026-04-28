@@ -957,10 +957,17 @@ function Wrapper({ children, onHome }) {
         width: "100%",
         maxWidth: "100vw",
         boxSizing: "border-box",
+        overflowX: "hidden",
         fontFamily: "'Georgia', serif",
       }}
     >
-      <div style={{ padding: "24px clamp(20px, 5vw, 64px) 60px" }}>
+      <div
+        style={{
+          padding: "24px clamp(14px, 4vw, 64px) 60px",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
         {children}
       </div>
     </div>
