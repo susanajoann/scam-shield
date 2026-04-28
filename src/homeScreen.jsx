@@ -15,27 +15,34 @@ import { createSession } from "./analytics.js";
 // Edit any of these strings and both the displayed text and the spoken text
 // will update automatically.
 
-const TEXT_APP_NAME    = "ScamSavvy";
+const TEXT_APP_NAME = "ScamSavvy";
 const TEXT_APP_SUBTITLE = "Know the scam before it knows you";
-const TEXT_TAGLINE     = "Learn to recognise the scams most commonly used against older Americans — at your own pace, in plain language.";
+const TEXT_TAGLINE =
+  "Learn to recognise the scams most commonly used against older Americans — at your own pace, in plain language.";
 
-const TEXT_AGE_LABEL   = "Before we begin, what is your age range?";
-const TEXT_AGE_CAPTION = "Collected anonymously to help researchers understand which age groups find certain scams most difficult to spot.";
+const TEXT_AGE_LABEL = "Before we begin, what is your age range?";
+const TEXT_AGE_CAPTION =
+  "Collected anonymously to help researchers understand which age groups find certain scams most difficult to spot.";
 
-const TEXT_NOTICE_TITLE  = "About your data";
-const TEXT_NOTICE_BODY   = "This tool records your quiz answers, time taken, and age range to help researchers understand which scam tactics are hardest to recognise. No names, emails, or personal information are collected or shared. All data is fully anonymous. You may stop at any time.";
-const TEXT_CONSENT_LABEL = "I understand and agree to anonymous data collection";
+const TEXT_NOTICE_TITLE = "About your data";
+const TEXT_NOTICE_BODY =
+  "This tool records your quiz answers, time taken, and age range to help researchers understand which scam tactics are hardest to recognise. No names, emails, or personal information are collected or shared. All data is fully anonymous. You may stop at any time.";
+const TEXT_CONSENT_LABEL =
+  "I understand and agree to anonymous data collection";
 
-const TEXT_BEGIN_BTN     = "Let's begin";
-const TEXT_HINT_BOTH     = "Please select your age range and agree to data collection above.";
-const TEXT_HINT_AGE      = "Please select your age range above.";
-const TEXT_HINT_CONSENT  = "Please agree to data collection above.";
+const TEXT_BEGIN_BTN = "Let's begin";
+const TEXT_HINT_BOTH =
+  "Please select your age range and agree to data collection above.";
+const TEXT_HINT_AGE = "Please select your age range above.";
+const TEXT_HINT_CONSENT = "Please agree to data collection above.";
 
-const TEXT_HOME_CHOOSE   = "Choose your difficulty";
-const TEXT_HOME_CAPTION  = "The quiz covers five common scam types in a random order.";
-const TEXT_START_BTN     = "Start quiz";
-const TEXT_HOME_HINT     = "Please choose a difficulty above.";
-const TEXT_HOME_FOOTER   = "All answers are recorded anonymously for research purposes only.";
+const TEXT_HOME_CHOOSE = "Choose your difficulty";
+const TEXT_HOME_CAPTION =
+  "The quiz covers five common scam types in a random order.";
+const TEXT_START_BTN = "Start quiz";
+const TEXT_HOME_HINT = "Please choose a difficulty above.";
+const TEXT_HOME_FOOTER =
+  "All answers are recorded anonymously for research purposes only.";
 
 // ─── Age ranges ───────────────────────────────────────────────────────────────
 // Edit this array to add, remove, or rename age ranges.
@@ -57,25 +64,25 @@ const AGE_RANGES = [
 
 const DIFFICULTIES = [
   {
-    key:   "easy",
+    key: "easy",
     label: "Easy",
-    desc:  "Choose the safe action",
+    desc: "Choose the safe action",
     color: "#2D6A4F",
-    bg:    "#D8F3DC",
+    bg: "#D8F3DC",
   },
   {
-    key:   "medium",
+    key: "medium",
     label: "Medium",
-    desc:  "Spot the scam tactic",
+    desc: "Spot the scam tactic",
     color: "#B5621A",
-    bg:    "#FDE8D0",
+    bg: "#FDE8D0",
   },
   {
-    key:   "hard",
+    key: "hard",
     label: "Hard",
-    desc:  "Highlight the red flags",
+    desc: "Highlight the red flags",
     color: "#9B2335",
-    bg:    "#FADADD",
+    bg: "#FADADD",
   },
 ];
 
@@ -83,9 +90,9 @@ const DIFFICULTIES = [
 // Each option has a label shown on the button and a rate passed to the
 // Web Speech API. 1.0 is the browser default; lower is slower.
 const SPEECH_SPEEDS = [
-  { label: "Slow",   rate: 0.65 },
+  { label: "Slow", rate: 0.65 },
   { label: "Normal", rate: 0.88 },
-  { label: "Fast",   rate: 1.1  },
+  { label: "Fast", rate: 1.1 },
 ];
 
 const SPEECH_SPEED_KEY = "scamshield_speech_speed"; // localStorage key
@@ -102,7 +109,9 @@ function getSpeechRate() {
 
 // Saves the chosen speech rate to localStorage.
 function saveSpeechRate(rate) {
-  try { localStorage.setItem(SPEECH_SPEED_KEY, String(rate)); } catch {}
+  try {
+    localStorage.setItem(SPEECH_SPEED_KEY, String(rate));
+  } catch {}
 }
 
 // ─── Auto-read setting ────────────────────────────────────────────────────────
@@ -112,17 +121,22 @@ function saveSpeechRate(rate) {
 const AUTO_READ_KEY = "scamshield_auto_read";
 
 function getAutoRead() {
-  try { return localStorage.getItem(AUTO_READ_KEY) === "true"; }
-  catch { return false; }
+  try {
+    return localStorage.getItem(AUTO_READ_KEY) === "true";
+  } catch {
+    return false;
+  }
 }
 
 function saveAutoRead(value) {
-  try { localStorage.setItem(AUTO_READ_KEY, value ? "true" : "false"); } catch {}
+  try {
+    localStorage.setItem(AUTO_READ_KEY, value ? "true" : "false");
+  } catch {}
 }
 
 // ─── Speech utility ─────────────────────────────────────────────────────────
 // Tracks the last text spoken so that changing speed can restart it.
-let _lastSpokenText = "";──
+let _lastSpokenText = "";
 
 function speak(text) {
   if (!window.speechSynthesis) return;
@@ -133,17 +147,17 @@ function speak(text) {
   // Split at sentence-ending punctuation to create natural pauses.
   const chunks = text
     .split(/(?<=[.!?])\s+/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
   chunks.forEach((chunk, i) => {
-    const utterance   = new SpeechSynthesisUtterance(chunk);
-    utterance.rate    = getSpeechRate();  // reads saved speed from localStorage
-    utterance.pitch   = 1;
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.rate = getSpeechRate(); // reads saved speed from localStorage
+    utterance.pitch = 1;
     if (i > 0) {
-      const pause   = new SpeechSynthesisUtterance(" ");
-      pause.rate    = 0.1;
-      pause.volume  = 0;
+      const pause = new SpeechSynthesisUtterance(" ");
+      pause.rate = 0.1;
+      pause.volume = 0;
       window.speechSynthesis.speak(pause);
     }
     window.speechSynthesis.speak(utterance);
@@ -152,7 +166,6 @@ function speak(text) {
 
 // Tracks the last text spoken so speed changes can restart it at the new rate.
 // Module-level so it persists across re-renders without a ref.
-let _lastSpokenText = null;
 
 function trackAndSpeak(text) {
   _lastSpokenText = text;
@@ -176,10 +189,10 @@ function shuffle(array) {
 // Nothing is hardcoded here separately.
 
 function buildLandingScript(ageRange, consentGiven) {
-  const ageSelected  = ageRange
+  const ageSelected = ageRange
     ? `You have selected: ${ageRange}.`
     : "You have not selected an age range yet.";
-  const ageOptions   = `The available options are: ${AGE_RANGES.join(", ")}.`;
+  const ageOptions = `The available options are: ${AGE_RANGES.join(", ")}.`;
   const consentState = consentGiven
     ? "You have agreed to data collection."
     : `Please tick the checkbox that says: ${TEXT_CONSENT_LABEL}.`;
@@ -199,11 +212,13 @@ function buildLandingScript(ageRange, consentGiven) {
 }
 
 function buildHomeScript(ageRange, selectedDifficulty) {
-  const diffOptions = DIFFICULTIES.map(d => `${d.label}: ${d.desc}.`).join(" ");
-  const selected    = selectedDifficulty
+  const diffOptions = DIFFICULTIES.map((d) => `${d.label}: ${d.desc}.`).join(
+    " ",
+  );
+  const selected = selectedDifficulty
     ? `You have selected: ${selectedDifficulty}.`
     : "No difficulty selected yet.";
-  const btnState    = selectedDifficulty
+  const btnState = selectedDifficulty
     ? `Tap ${TEXT_START_BTN} to begin.`
     : TEXT_HOME_HINT;
 
@@ -221,11 +236,11 @@ function buildHomeScript(ageRange, selectedDifficulty) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function HomeScreen({ onStart }) {
-  const [screen, setScreen]                   = useState("landing");
-  const [ageRange, setAgeRange]               = useState("");
-  const [consentGiven, setConsentGiven]       = useState(false);
+  const [screen, setScreen] = useState("landing");
+  const [ageRange, setAgeRange] = useState("");
+  const [consentGiven, setConsentGiven] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState(null);
-  const [starting, setStarting]               = useState(false);
+  const [starting, setStarting] = useState(false);
   // Speech speed — initialised from localStorage so it persists across sessions
   const [speechRate, setSpeechRate] = useState(getSpeechRate);
   // Auto-read — if true, each screen speaks automatically after a short delay
@@ -255,14 +270,20 @@ export default function HomeScreen({ onStart }) {
   // Auto-read: speak the landing page content after a 1.5s delay when screen loads
   useEffect(() => {
     if (!autoRead) return;
-    const timer = setTimeout(() => trackAndSpeak(buildLandingScript(ageRange, consentGiven)), 1500);
+    const timer = setTimeout(
+      () => trackAndSpeak(buildLandingScript(ageRange, consentGiven)),
+      1500,
+    );
     return () => clearTimeout(timer);
   }, []);
 
   // Auto-read: speak the home page content after a 1.5s delay
   useEffect(() => {
     if (screen !== "home" || !autoRead) return;
-    const timer = setTimeout(() => trackAndSpeak(buildHomeScript(ageRange, selectedDifficulty)), 1500);
+    const timer = setTimeout(
+      () => trackAndSpeak(buildHomeScript(ageRange, selectedDifficulty)),
+      1500,
+    );
     return () => clearTimeout(timer);
   }, [screen]);
 
@@ -277,14 +298,14 @@ export default function HomeScreen({ onStart }) {
           <div style={styles.audioWrapper}>
             {/* Single 🔊 button — tapping expands speed/auto controls */}
             <button
-              onClick={() => setAudioOpen(o => !o)}
+              onClick={() => setAudioOpen((o) => !o)}
               style={{
                 ...styles.speakBtn,
                 background: audioOpen ? "#EDE8F8" : "none",
                 position: "relative",
               }}
-              title="Audio settings"
-              aria-label="Audio settings"
+              title='Audio settings'
+              aria-label='Audio settings'
             >
               🔊
             </button>
@@ -293,14 +314,14 @@ export default function HomeScreen({ onStart }) {
               <div style={styles.audioPanel}>
                 <p style={styles.audioPanelLabel}>Speed</p>
                 <div style={styles.audioBtnRow}>
-                  {SPEECH_SPEEDS.map(s => (
+                  {SPEECH_SPEEDS.map((s) => (
                     <button
                       key={s.label}
                       onClick={() => handleSpeedChange(s.rate)}
                       style={{
                         ...styles.speedBtn,
-                        background:  speechRate === s.rate ? "#3D1580" : "#fff",
-                        color:       speechRate === s.rate ? "#fff"    : "#3D1580",
+                        background: speechRate === s.rate ? "#3D1580" : "#fff",
+                        color: speechRate === s.rate ? "#fff" : "#3D1580",
                         borderColor: "#3D1580",
                       }}
                     >
@@ -313,8 +334,8 @@ export default function HomeScreen({ onStart }) {
                     onClick={handleAutoReadToggle}
                     style={{
                       ...styles.speedBtn,
-                      background:  autoRead ? "#2D6A4F" : "#fff",
-                      color:       autoRead ? "#fff"    : "#2D6A4F",
+                      background: autoRead ? "#2D6A4F" : "#fff",
+                      color: autoRead ? "#fff" : "#2D6A4F",
                       borderColor: "#2D6A4F",
                       flex: 1,
                     }}
@@ -358,14 +379,14 @@ export default function HomeScreen({ onStart }) {
         <Spacer h={16} />
 
         <div style={styles.ageGrid}>
-          {AGE_RANGES.map(range => (
+          {AGE_RANGES.map((range) => (
             <button
               key={range}
               onClick={() => setAgeRange(range)}
               style={{
                 ...styles.ageBtn,
                 background: ageRange === range ? "#3D1580" : "#fff",
-                color:      ageRange === range ? "#fff"    : "#3D1580",
+                color: ageRange === range ? "#fff" : "#3D1580",
               }}
             >
               {range}
@@ -385,9 +406,9 @@ export default function HomeScreen({ onStart }) {
           <Spacer h={18} />
           <label style={styles.checkLabel}>
             <input
-              type="checkbox"
+              type='checkbox'
               checked={consentGiven}
-              onChange={e => setConsentGiven(e.target.checked)}
+              onChange={(e) => setConsentGiven(e.target.checked)}
               style={styles.checkbox}
             />
             <span>{TEXT_CONSENT_LABEL}</span>
@@ -408,8 +429,8 @@ export default function HomeScreen({ onStart }) {
               {!ageRange && !consentGiven
                 ? TEXT_HINT_BOTH
                 : !ageRange
-                ? TEXT_HINT_AGE
-                : TEXT_HINT_CONSENT}
+                  ? TEXT_HINT_AGE
+                  : TEXT_HINT_CONSENT}
             </p>
           </>
         )}
@@ -422,7 +443,7 @@ export default function HomeScreen({ onStart }) {
     const handleStart = async () => {
       if (!selectedDifficulty || starting) return;
       setStarting(true);
-      const sessionId     = await createSession(selectedDifficulty, ageRange);
+      const sessionId = await createSession(selectedDifficulty, ageRange);
       const shuffledScams = shuffle(SCAMS);
       onStart(selectedDifficulty, shuffledScams, ageRange, sessionId);
     };
@@ -437,13 +458,13 @@ export default function HomeScreen({ onStart }) {
           </div>
           <div style={styles.audioWrapper}>
             <button
-              onClick={() => setAudioOpen(o => !o)}
+              onClick={() => setAudioOpen((o) => !o)}
               style={{
                 ...styles.speakBtn,
                 background: audioOpen ? "#EDE8F8" : "none",
               }}
-              title="Audio settings"
-              aria-label="Audio settings"
+              title='Audio settings'
+              aria-label='Audio settings'
             >
               🔊
             </button>
@@ -451,14 +472,14 @@ export default function HomeScreen({ onStart }) {
               <div style={styles.audioPanel}>
                 <p style={styles.audioPanelLabel}>Speed</p>
                 <div style={styles.audioBtnRow}>
-                  {SPEECH_SPEEDS.map(s => (
+                  {SPEECH_SPEEDS.map((s) => (
                     <button
                       key={s.label}
                       onClick={() => handleSpeedChange(s.rate)}
                       style={{
                         ...styles.speedBtn,
-                        background:  speechRate === s.rate ? "#3D1580" : "#fff",
-                        color:       speechRate === s.rate ? "#fff"    : "#3D1580",
+                        background: speechRate === s.rate ? "#3D1580" : "#fff",
+                        color: speechRate === s.rate ? "#fff" : "#3D1580",
                         borderColor: "#3D1580",
                       }}
                     >
@@ -471,8 +492,8 @@ export default function HomeScreen({ onStart }) {
                     onClick={handleAutoReadToggle}
                     style={{
                       ...styles.speedBtn,
-                      background:  autoRead ? "#2D6A4F" : "#fff",
-                      color:       autoRead ? "#fff"    : "#2D6A4F",
+                      background: autoRead ? "#2D6A4F" : "#fff",
+                      color: autoRead ? "#fff" : "#2D6A4F",
                       borderColor: "#2D6A4F",
                       flex: 1,
                     }}
@@ -482,7 +503,9 @@ export default function HomeScreen({ onStart }) {
                 </div>
                 <button
                   onClick={() => {
-                    trackAndSpeak(buildHomeScript(ageRange, selectedDifficulty));
+                    trackAndSpeak(
+                      buildHomeScript(ageRange, selectedDifficulty),
+                    );
                     setAudioOpen(false);
                   }}
                   style={{
@@ -509,7 +532,7 @@ export default function HomeScreen({ onStart }) {
         <Spacer h={20} />
 
         <div style={styles.diffList}>
-          {DIFFICULTIES.map(d => {
+          {DIFFICULTIES.map((d) => {
             const isSelected = selectedDifficulty === d.key;
             return (
               <button
@@ -517,9 +540,9 @@ export default function HomeScreen({ onStart }) {
                 onClick={() => setSelectedDifficulty(d.key)}
                 style={{
                   ...styles.diffCard,
-                  background:  isSelected ? d.bg    : "#fff",
+                  background: isSelected ? d.bg : "#fff",
                   borderColor: isSelected ? d.color : "#C9B8E8",
-                  borderWidth: isSelected ? 2.5     : 1.5,
+                  borderWidth: isSelected ? 2.5 : 1.5,
                 }}
               >
                 <div style={styles.diffCardInner}>
@@ -539,7 +562,10 @@ export default function HomeScreen({ onStart }) {
 
         <Spacer h={32} />
 
-        <BigButton onClick={handleStart} disabled={!selectedDifficulty || starting}>
+        <BigButton
+          onClick={handleStart}
+          disabled={!selectedDifficulty || starting}
+        >
           {starting ? "Starting..." : `${TEXT_START_BTN} →`}
         </BigButton>
 
@@ -563,13 +589,15 @@ export default function HomeScreen({ onStart }) {
 
 function Wrapper({ children }) {
   return (
-    <div style={{
-      width: "100%",
-      maxWidth: "100vw",
-      boxSizing: "border-box",
-      padding: "40px clamp(16px, 5vw, 60px) 60px",
-      fontFamily: "'Georgia', serif",
-    }}>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "100vw",
+        boxSizing: "border-box",
+        padding: "40px clamp(16px, 5vw, 60px) 60px",
+        fontFamily: "'Georgia', serif",
+      }}
+    >
       {children}
     </div>
   );
@@ -579,44 +607,52 @@ function Logo({ small }) {
   return (
     <div>
       {small ? (
-        <p style={{
-          fontSize: "clamp(20px, 3vw, 26px)",
-          fontWeight: 700,
-          margin: 0,
-          fontFamily: "Georgia, serif",
-          letterSpacing: "-0.5px",
-          lineHeight: 1,
-        }}>
+        <p
+          style={{
+            fontSize: "clamp(20px, 3vw, 26px)",
+            fontWeight: 700,
+            margin: 0,
+            fontFamily: "Georgia, serif",
+            letterSpacing: "-0.5px",
+            lineHeight: 1,
+          }}
+        >
           <span style={{ color: "#3D1580" }}>Scam</span>
           <span style={{ color: "#C8952A" }}>Savvy</span>
         </p>
       ) : (
         <div>
-          <p style={{
-            fontSize: "clamp(36px, 5vw, 52px)",
-            fontWeight: 700,
-            margin: 0,
-            fontFamily: "Georgia, serif",
-            letterSpacing: "-1px",
-            lineHeight: 1,
-          }}>
+          <p
+            style={{
+              fontSize: "clamp(36px, 5vw, 52px)",
+              fontWeight: 700,
+              margin: 0,
+              fontFamily: "Georgia, serif",
+              letterSpacing: "-1px",
+              lineHeight: 1,
+            }}
+          >
             <span style={{ color: "#3D1580" }}>Scam</span>
             <span style={{ color: "#C8952A" }}>Savvy</span>
           </p>
-          <div style={{
-            height: 2,
-            background: "#C8952A",
-            opacity: 0.5,
-            margin: "10px 0 7px",
-            width: "100%",
-          }} />
-          <p style={{
-            fontSize: "clamp(11px, 1.5vw, 13px)",
-            color: "#7A5FAA",
-            margin: 0,
-            fontFamily: "sans-serif",
-            letterSpacing: "2.5px",
-          }}>
+          <div
+            style={{
+              height: 2,
+              background: "#C8952A",
+              opacity: 0.5,
+              margin: "10px 0 7px",
+              width: "100%",
+            }}
+          />
+          <p
+            style={{
+              fontSize: "clamp(11px, 1.5vw, 13px)",
+              color: "#7A5FAA",
+              margin: 0,
+              fontFamily: "sans-serif",
+              letterSpacing: "2.5px",
+            }}
+          >
             {TEXT_APP_SUBTITLE.toUpperCase()}
           </p>
         </div>
@@ -640,11 +676,13 @@ function SpeakButton({ onClick, label }) {
 
 function Divider() {
   return (
-    <hr style={{
-      border: "none",
-      borderTop: "1.5px solid #E0E8F0",
-      margin: 0,
-    }} />
+    <hr
+      style={{
+        border: "none",
+        borderTop: "1.5px solid #E0E8F0",
+        margin: 0,
+      }}
+    />
   );
 }
 
