@@ -152,7 +152,7 @@ function speak(text) {
 
 // Tracks the last text spoken so speed changes can restart it at the new rate.
 // Module-level so it persists across re-renders without a ref.
-let _lastSpokenText = null;
+
 
 function trackAndSpeak(text) {
   _lastSpokenText = text;
