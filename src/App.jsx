@@ -27,8 +27,8 @@ export default function App() {
  
   // Called by HomeScreen when the user taps "Start quiz".
   // Stores everything the quiz needs and switches to the quiz screen.
-  const handleStart = (difficulty, shuffledScams, ageRange, sessionId) => {
-    setQuizProps({ difficulty, shuffledScams, ageRange, sessionId });
+  const handleStart = (difficulty, shuffledScams, ageRange, sessionId, startedAt) => {
+    setQuizProps({ difficulty, shuffledScams, ageRange, sessionId, startedAt });
     setScreen("quiz");
   };
  
@@ -50,6 +50,7 @@ export default function App() {
         scams={quizProps.shuffledScams}
         ageRange={quizProps.ageRange}
         sessionId={quizProps.sessionId}
+        startedAt={quizProps.startedAt}
         onPlayAgain={handlePlayAgain}
       />
     );

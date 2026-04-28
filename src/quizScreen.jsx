@@ -186,38 +186,43 @@ function openPrintPage(scams, difficulty, scamScores) {
     ? Math.round((totalCorrect / totalQuestions) * 100)
     : 0;
 
-  // Print page title and difficulty use TEXT_ constants
+  // Purple = #3D1580, Gold = #C8952A, Light purple bg = #FAF7FF
   let body = `
-    <h1 style="font-family: Georgia, serif; color: #1A3C5E;">
-      🛡️ ${TEXT_PRINT_TITLE}
-    </h1>
-    <p style="font-family: sans-serif; color: #555;">
-      ${TEXT_PRINT_DIFFICULTY} <strong>${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</strong>
+    <!-- Logo wordmark -->
+    <div style="margin-bottom: 4px;">
+      <span style="font-family: Georgia, serif; font-size: 36px; font-weight: 700; color: #3D1580; letter-spacing: -1px;">Scam</span><span style="font-family: Georgia, serif; font-size: 36px; font-weight: 700; color: #C8952A; letter-spacing: -1px;">Savvy</span>
+    </div>
+    <div style="height: 2px; background: #C8952A; opacity: 0.5; width: 320px; margin: 6px 0 4px;"></div>
+    <p style="font-family: sans-serif; font-size: 11px; color: #7A5FAA; letter-spacing: 2px; margin: 0 0 20px;">KNOW THE SCAM BEFORE IT KNOWS YOU</p>
+
+    <p style="font-family: sans-serif; font-size: 14px; color: #555; margin: 0 0 4px;">
+      ${TEXT_PRINT_DIFFICULTY} <strong style="color: #3D1580;">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</strong>
     </p>
-    <hr style="border: none; border-top: 1px solid #ddd; margin: 16px 0;" />
-    <div style="background: #F0F4F8; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; font-family: sans-serif;">
-      <p style="font-size: 32px; font-weight: 700; color: #1A3C5E; margin: 0;">${overallPct}%</p>
-      <p style="color: #555; margin: 4px 0 0;">${totalCorrect} / ${totalQuestions} ${TEXT_CORRECT_LABEL}</p>
+    <hr style="border: none; border-top: 1px solid #C9B8E8; margin: 16px 0;" />
+
+    <!-- Overall score -->
+    <div style="background: #FAF7FF; border: 1.5px solid #C9B8E8; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; font-family: sans-serif;">
+      <p style="font-size: 36px; font-weight: 700; color: #3D1580; margin: 0;">${overallPct}%</p>
+      <p style="color: #7A5FAA; margin: 4px 0 0; font-size: 14px;">${totalCorrect} / ${totalQuestions} ${TEXT_CORRECT_LABEL}</p>
     </div>
   `;
 
   scams.forEach(scam => {
     body += `
-      <h2 style="font-family: Georgia, serif; color: #1A3C5E; margin-top: 32px;">
+      <h2 style="font-family: Georgia, serif; color: #3D1580; margin-top: 28px; margin-bottom: 8px; font-size: 18px;">
         ${scam.icon} ${scam.name}
       </h2>
     `;
     if (isHardMode) {
       const hardContent = scam.hard;
-      body += `<p style="font-family: sans-serif; color: #555; font-style: italic;">${hardContent.instruction}</p>`;
+      body += `<p style="font-family: sans-serif; color: #555; font-style: italic; font-size: 14px; margin: 0 0 12px;">${hardContent.instruction}</p>`;
       hardContent.body.forEach((segment, idx) => {
         if (!segment.isFlag) return;
-        // TEXT_PRINT_RED_FLAG drives the label in the print page
         body += `
-          <div style="background: #FADADD; border-left: 4px solid #9B2335; padding: 10px 14px; margin-bottom: 10px; border-radius: 4px; font-family: sans-serif;">
-            <p style="margin: 0; font-weight: 600; color: #6B1020;">🚩 ${TEXT_PRINT_RED_FLAG} ${idx + 1}</p>
-            <p style="margin: 6px 0 0; color: #333;">"${segment.text}"</p>
-            <p style="margin: 6px 0 0; color: #555; font-size: 14px;">${segment.reason}</p>
+          <div style="background: #FAF7FF; border-left: 4px solid #C8952A; padding: 10px 14px; margin-bottom: 10px; border-radius: 4px; font-family: sans-serif;">
+            <p style="margin: 0; font-weight: 600; color: #3D1580; font-size: 13px;">🚩 ${TEXT_PRINT_RED_FLAG} ${idx + 1}</p>
+            <p style="margin: 6px 0 0; color: #1A0A3C; font-size: 14px;">"${segment.text}"</p>
+            <p style="margin: 6px 0 0; color: #555; font-size: 13px;">${segment.reason}</p>
           </div>
         `;
       });
@@ -225,24 +230,23 @@ function openPrintPage(scams, difficulty, scamScores) {
       const questions = scam[difficulty];
       questions.forEach((q, idx) => {
         const correctOption = q.options.find(o => o.correct);
-        // TEXT_PRINT_CORRECT_ANS drives the label
         body += `
-          <div style="margin-bottom: 20px; font-family: sans-serif;">
-            <p style="font-weight: 600; color: #1A3C5E; margin: 0 0 6px;">
+          <div style="margin-bottom: 18px; font-family: sans-serif;">
+            <p style="font-weight: 600; color: #1A0A3C; margin: 0 0 6px; font-size: 15px;">
               Q${idx + 1}. ${q.question}
             </p>
-            <p style="margin: 0 0 4px; color: #2D6A4F;">
+            <p style="margin: 0 0 4px; color: #3D1580; font-size: 14px;">
               ✓ <strong>${TEXT_PRINT_CORRECT_ANS}</strong> ${correctOption?.text ?? "—"}
             </p>
-            <p style="margin: 0; color: #555; font-size: 14px;">${q.explanation}</p>
+            <p style="margin: 0; color: #555; font-size: 13px; line-height: 1.6;">${q.explanation}</p>
           </div>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 0 0 16px;" />
+          <hr style="border: none; border-top: 1px solid #C9B8E8; margin: 0 0 14px;" />
         `;
       });
     }
   });
 
-  body += `<p style="font-family: sans-serif; font-size: 12px; color: #999; margin-top: 32px;">${TEXT_PRINT_FOOTER}</p>`;
+  body += `<p style="font-family: sans-serif; font-size: 11px; color: #7A5FAA; margin-top: 32px; letter-spacing: 0.5px;">${TEXT_PRINT_FOOTER}</p>`;
 
   const printWindow = window.open("", "_blank");
   printWindow.document.write(`
@@ -251,7 +255,7 @@ function openPrintPage(scams, difficulty, scamScores) {
       <head>
         <title>${TEXT_PRINT_TITLE}</title>
         <style>
-          body { max-width: 700px; margin: 40px auto; padding: 0 24px; }
+          body { max-width: 700px; margin: 40px auto; padding: 0 24px; background: #fff; }
           @media print { body { margin: 20px; } }
         </style>
       </head>
@@ -269,6 +273,7 @@ export default function QuizScreen({
   scams,
   ageRange,
   sessionId,
+  startedAt,
   onPlayAgain,
 }) {
   const [screen, setScreen]                 = useState("intro");
@@ -380,20 +385,25 @@ export default function QuizScreen({
 
   const handleCheckAnswer = async () => {
     if (!selectedOption || showFeedback) return;
-    const correct    = selectedOption.correct;
-    const timeTaken  = Math.round((Date.now() - questionStartTime.current) / 1000);
+    const correct     = selectedOption.correct;
+    const startedAt   = new Date(questionStartTime.current).toISOString();
+    const finishedAt  = new Date().toISOString();
+    const timeTaken   = Math.round((Date.now() - questionStartTime.current) / 1000);
     if (correct) setCurrentScamScore((s) => s + 1);
     setShowFeedback(true);
-    // Only speak immediately if auto-read is off.
-    // When auto-read is on, the useEffect watching showFeedback handles it
-    // after a short delay — speaking here too would cause double-speaking.
-    if (!getAutoRead()) {
+    if (getAutoRead()) {
       const correctOption = shuffledOptions.find(o => o.correct);
       speak(buildFeedbackScript(correct, currentQuestion.explanation, correctOption?.text ?? ""));
     }
     await recordAnswer(sessionId, {
-      scamId: currentScam.id, questionId: currentQuestion.id,
-      ageRange, difficulty, correct, timeTaken,
+      scamId:     currentScam.id,
+      questionId: currentQuestion.id,
+      ageRange,
+      difficulty,
+      correct,
+      timeTaken,
+      startedAt,
+      finishedAt,
     });
   };
 
@@ -413,6 +423,8 @@ export default function QuizScreen({
     const score          = Math.max(0, correctHits - falsePositives);
     const timeTaken      = Math.round((Date.now() - questionStartTime.current) / 1000);
     const missed         = allFlags.length - correctHits;
+    const startedAt  = new Date(questionStartTime.current).toISOString();
+    const finishedAt = new Date().toISOString();
     setCurrentScamScore((s) => s + score);
     setAnswersRevealed(true);
     // Only speak immediately if auto-read is off — same pattern as feedback
@@ -422,8 +434,14 @@ export default function QuizScreen({
     for (const segment of hardContent.body) {
       if (!segment.isFlag) continue;
       await recordAnswer(sessionId, {
-        scamId: currentScam.id, questionId: segment.id,
-        ageRange, difficulty, correct: !!highlighted[segment.id], timeTaken,
+        scamId:     currentScam.id,
+        questionId: segment.id,
+        ageRange,
+        difficulty,
+        correct:    !!highlighted[segment.id],
+        timeTaken,
+        startedAt,
+        finishedAt,
       });
     }
   };
@@ -448,7 +466,7 @@ export default function QuizScreen({
       const isLastScam = scamIndex + 1 >= scams.length;
       if (isLastScam) {
         const totalTime = Math.round((Date.now() - quizStartTime.current) / 1000);
-        await completeSession(sessionId, totalTime);
+        await completeSession(sessionId, totalTime, ageRange, difficulty, startedAt);
         setScreen("results");
       } else {
         setScamIndex((i) => i + 1);
