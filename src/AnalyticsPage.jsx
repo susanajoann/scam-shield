@@ -82,7 +82,7 @@ async function fetchTable(tableName) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage({ readScriptRef }) {
   const [answers, setAnswers] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +104,36 @@ export default function AnalyticsPage() {
         setLoading(false);
       });
   }, []);
+
+  // Register read script with NavBar once data is loaded
+  useEffect(() => {
+    if (!readScriptRef) return;
+    if (loading) {
+      readScriptRef.current = () =>
+        "Loading research data from the database. Please wait.";
+      return;
+    }
+    if (!answers.length) {
+      readScriptRef.current = () =>
+        "No answer data yet. Complete a quiz session to see results here.";
+      return;
+    }
+    const totalAnswers = answers.length;
+    const totalSessions = sessions.length;
+    const completedSess = sessions.filter((s) => s.completed).length;
+    const overallAccuracy = answers.length
+      ? Math.round(
+          (answers.filter((a) => a.correct).length / answers.length) * 100,
+        )
+      : 0;
+    readScriptRef.current = () =>
+      `Research Dashboard. Live data from Supabase. ` +
+      `Total answers recorded: ${totalAnswers}. ` +
+      `Total sessions: ${totalSessions}. ` +
+      `Completed sessions: ${completedSess}. ` +
+      `Overall accuracy: ${overallAccuracy} percent. ` +
+      `Use the filters on screen to narrow results by difficulty or age range.`;
+  }, [loading, answers.length, sessions.length]);
 
   if (loading)
     return (
@@ -423,6 +453,54 @@ export default function AnalyticsPage() {
       ) : null}
 
       <Divider />
+
+      {/* ── Raw sessions table ── */}
+      <SectionTitle>Recent sessions</SectionTitle>
+      <p style={s.chartCaption}>Most recent 20 sessions.</p>
+      <div style={s.tableWrapper}>
+        <table style={s.table}>
+          <thead>
+            <tr>
+              {[
+                "Session ID",
+                "Age range",
+                "Difficulty",
+                "Completed",
+                "Total time (s)",
+              ].map((h) => (
+                <th key={h} style={s.th}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[...sessions]
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              .slice(0, 20)
+              .map((sess, i) => (
+                <tr
+                  key={i}
+                  style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}
+                >
+                  <td style={s.td}>{sess.session_id?.slice(0, 8)}…</td>
+                  <td style={s.td}>{sess.age_range ?? "—"}</td>
+                  <td style={s.td}>{sess.difficulty ?? "—"}</td>
+                  <td
+                    style={{
+                      ...s.td,
+                      color: sess.completed ? GREEN : RED,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {sess.completed ? "Yes" : "No"}
+                  </td>
+                  <td style={s.td}>{sess.total_time ?? "—"}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
 
       <p style={s.footer}>
         All data is anonymous. No personal information is stored or displayed.

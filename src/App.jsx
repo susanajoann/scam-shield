@@ -411,8 +411,14 @@ export default function App() {
             <QuizFlow resetRef={quizResetRef} readScriptRef={readScriptRef} />
           }
         />
-        <Route path='/analytics' element={<AnalyticsPage />} />
-        <Route path='/feedback' element={<FeedbackPage />} />
+        <Route
+          path='/analytics'
+          element={<AnalyticsPage readScriptRef={readScriptRef} />}
+        />
+        <Route
+          path='/feedback'
+          element={<FeedbackPage readScriptRef={readScriptRef} />}
+        />
       </Routes>
     </BrowserRouter>
   );

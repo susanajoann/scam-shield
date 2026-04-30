@@ -4,7 +4,7 @@
 // Simple feedback form — saves anonymous messages to Supabase.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -26,9 +26,16 @@ async function submitFeedback(message) {
   }
 }
 
-export default function FeedbackPage() {
+export default function FeedbackPage({ readScriptRef }) {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("idle"); // idle | submitting | success | error
+
+  // Register read script with NavBar 🔊 button
+  useEffect(() => {
+    if (!readScriptRef) return;
+    readScriptRef.current = () =>
+      "Share your feedback. We would love to hear what you thought of ScamSavvy — what worked well, what was confusing, or anything you would like to see added. All feedback is anonymous. Type your message in the text box and press Submit feedback.";
+  }, []);
 
   const handleSubmit = async () => {
     if (!message.trim()) return;
