@@ -150,49 +150,41 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
           overflow: "hidden",
         }}
       >
-        {/* Logo text — "SS" on narrow screens, full wordmark on wider screens */}
+        {/* SS on mobile, full wordmark on desktop — controlled by CSS classes */}
+        <style>{`
+          .logo-full { display: inline; }
+          .logo-short { display: none; }
+          @media (max-width: 500px) {
+            .logo-full { display: none; }
+            .logo-short { display: inline; }
+          }
+        `}</style>
         <span
+          className='logo-full'
           style={{
             fontWeight: 700,
             fontFamily: "Georgia, serif",
             letterSpacing: "-0.5px",
             lineHeight: 1,
-            fontSize: "clamp(22px, 3.5vw, 28px)",
+            fontSize: 26,
+            whiteSpace: "nowrap",
           }}
         >
-          {/* Purple S always visible */}
+          <span style={{ color: "#3D1580" }}>Scam</span>
+          <span style={{ color: "#C8952A" }}>Savvy</span>
+        </span>
+        <span
+          className='logo-short'
+          style={{
+            fontWeight: 700,
+            fontFamily: "Georgia, serif",
+            letterSpacing: "-1px",
+            lineHeight: 1,
+            fontSize: 24,
+          }}
+        >
           <span style={{ color: "#3D1580" }}>S</span>
-          {/* "cam" hidden on mobile by shrinking to 0 width via letter-spacing and font-size */}
-          <span
-            style={{
-              color: "#3D1580",
-              fontSize: "clamp(0px, 3.5vw, 28px)",
-              letterSpacing: "clamp(-8px, 0vw, 0px)",
-              opacity: "clamp(0, calc((100vw - 400px) / 100), 1)",
-              display: "inline-block",
-              overflow: "hidden",
-              maxWidth: "clamp(0px, 10vw, 80px)",
-              transition: "max-width 0.2s",
-            }}
-          >
-            cam
-          </span>
-          {/* Gold S always visible */}
           <span style={{ color: "#C8952A" }}>S</span>
-          {/* "avvy" hidden on mobile */}
-          <span
-            style={{
-              color: "#C8952A",
-              fontSize: "clamp(0px, 3.5vw, 28px)",
-              opacity: "clamp(0, calc((100vw - 400px) / 100), 1)",
-              display: "inline-block",
-              overflow: "hidden",
-              maxWidth: "clamp(0px, 10vw, 80px)",
-              transition: "max-width 0.2s",
-            }}
-          >
-            avvy
-          </span>
         </span>
         <span
           style={{
@@ -261,7 +253,7 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
           color: isActive ? "#3D1580" : "#7A5FAA",
           textDecoration: "none",
           borderBottom: isActive
-            ? "3px solid #2D6A4F"
+            ? "3px solid #3D1580"
             : "3px solid transparent",
           transition: "color 0.15s, border-color 0.15s",
           whiteSpace: "nowrap",
