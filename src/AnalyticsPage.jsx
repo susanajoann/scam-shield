@@ -85,6 +85,7 @@ async function fetchTable(tableName) {
 export default function AnalyticsPage({ readScriptRef }) {
   const [answers, setAnswers] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -93,10 +94,15 @@ export default function AnalyticsPage({ readScriptRef }) {
   const [selAge, setSelAge] = useState("all");
 
   useEffect(() => {
-    Promise.all([fetchTable("answers"), fetchTable("sessions")])
-      .then(([ans, sess]) => {
+    Promise.all([
+      fetchTable("answers"),
+      fetchTable("sessions"),
+      fetchTable("leaderboard_by_difficulty"),
+    ])
+      .then(([ans, sess, lb]) => {
         setAnswers(ans);
         setSessions(sess);
+        setLeaderboard(lb);
         setLoading(false);
       })
       .catch((err) => {
@@ -459,18 +465,16 @@ export default function AnalyticsPage({ readScriptRef }) {
         Leaderboard — fastest completions per difficulty
       </SectionTitle>
       <p style={s.chartCaption}>
-        Completed sessions only, ranked by total time. Ties broken by session
-        order.
+        Completed sessions only. Ranked by highest accuracy, then fastest time
+        as a tiebreaker.
       </p>
       {["easy", "medium", "hard"].map((diff) => {
-        const diffSessions = [...sessions]
-          .filter(
-            (s) => s.completed && s.total_time != null && s.difficulty === diff,
-          )
-          .sort((a, b) => a.total_time - b.total_time)
+        // Pull directly from the Supabase view — already sorted by accuracy desc, time asc
+        const diffRows = leaderboard
+          .filter((r) => r.difficulty === diff)
           .slice(0, 10);
 
-        if (!diffSessions.length) return null;
+        if (!diffRows.length) return null;
 
         const medals = ["🥇", "🥈", "🥉"];
         const diffColor =
@@ -485,7 +489,6 @@ export default function AnalyticsPage({ readScriptRef }) {
                 color: diffColor,
                 fontFamily: "sans-serif",
                 margin: "0 0 10px",
-                textTransform: "capitalize",
               }}
             >
               {diff.charAt(0).toUpperCase() + diff.slice(1)}
@@ -494,7 +497,13 @@ export default function AnalyticsPage({ readScriptRef }) {
               <table style={s.table}>
                 <thead>
                   <tr>
-                    {["Rank", "Age range", "Time (s)", "Finished"].map((h) => (
+                    {[
+                      "Rank",
+                      "Age range",
+                      "Accuracy",
+                      "Time (s)",
+                      "Finished",
+                    ].map((h) => (
                       <th key={h} style={s.th}>
                         {h}
                       </th>
@@ -502,7 +511,7 @@ export default function AnalyticsPage({ readScriptRef }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {diffSessions.map((sess, i) => (
+                  {diffRows.map((row, i) => (
                     <tr
                       key={i}
                       style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}
@@ -512,13 +521,20 @@ export default function AnalyticsPage({ readScriptRef }) {
                       >
                         {medals[i] ?? `#${i + 1}`}
                       </td>
-                      <td style={s.td}>{sess.age_range ?? "—"}</td>
-                      <td style={{ ...s.td, fontWeight: 600 }}>
-                        {sess.total_time}s
+                      <td style={s.td}>{row.age_range ?? "—"}</td>
+                      <td
+                        style={{
+                          ...s.td,
+                          fontWeight: 600,
+                          color: accuracyColor(Number(row.accuracy_pct)),
+                        }}
+                      >
+                        {row.accuracy_pct}%
                       </td>
+                      <td style={s.td}>{row.total_time}s</td>
                       <td style={s.td}>
-                        {sess.finished_at
-                          ? new Date(sess.finished_at).toLocaleDateString(
+                        {row.finished_at_est
+                          ? new Date(row.finished_at_est).toLocaleDateString(
                               "en-US",
                               {
                                 month: "short",

@@ -464,24 +464,13 @@ export default function QuizScreen({
   const handleCheckAnswer = async () => {
     if (!selectedOption || showFeedback) return;
     const correct = selectedOption.correct;
+    const finishedAt = new Date().toISOString();
+    const startedAt = new Date(questionStartTime.current).toISOString();
     const timeTaken = Math.round(
       (Date.now() - questionStartTime.current) / 1000,
     );
     if (correct) setCurrentScamScore((s) => s + 1);
     setShowFeedback(true);
-    // Only speak immediately if auto-read is off.
-    // When auto-read is on, the useEffect watching showFeedback handles it
-    // after a short delay — speaking here too would cause double-speaking.
-    if (!getAutoRead()) {
-      const correctOption = shuffledOptions.find((o) => o.correct);
-      speak(
-        buildFeedbackScript(
-          correct,
-          currentQuestion.explanation,
-          correctOption?.text ?? "",
-        ),
-      );
-    }
     await recordAnswer(sessionId, {
       scamId: currentScam.id,
       questionId: currentQuestion.id,
@@ -489,6 +478,8 @@ export default function QuizScreen({
       difficulty,
       correct,
       timeTaken,
+      startedAt,
+      finishedAt,
     });
   };
 
@@ -510,6 +501,8 @@ export default function QuizScreen({
       hardContent.body.filter((s) => !s.isFlag && highlighted[s.id]).length +
       (!hardContent.senderIsFlag && senderHighlighted ? 1 : 0);
     const score = Math.max(0, correctHits - falsePositives);
+    const finishedAt = new Date().toISOString();
+    const startedAt = new Date(questionStartTime.current).toISOString();
     const timeTaken = Math.round(
       (Date.now() - questionStartTime.current) / 1000,
     );
@@ -517,7 +510,6 @@ export default function QuizScreen({
       allFlags.length + (hardContent.senderIsFlag ? 1 : 0) - correctHits;
     setCurrentScamScore((s) => s + score);
     setAnswersRevealed(true);
-    // Only speak immediately if auto-read is off — same pattern as feedback
     if (!getAutoRead()) {
       speak(buildHardRevealScript(correctHits, allFlags.length, missed));
     }
@@ -530,6 +522,8 @@ export default function QuizScreen({
         difficulty,
         correct: !!highlighted[segment.id],
         timeTaken,
+        startedAt,
+        finishedAt,
       });
     }
   };
