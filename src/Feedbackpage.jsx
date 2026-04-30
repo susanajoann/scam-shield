@@ -82,7 +82,7 @@ export default function FeedbackPage({ readScriptRef }) {
             lineHeight: 1.7,
           }}
         >
-          We would love to hear what you thought of ScamSavvy — what worked
+          We would love to hear what you thought of ScamSavvy - what worked
           well, what was confusing, or anything you would like to see added. All
           feedback is anonymous.
         </p>
