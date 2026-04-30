@@ -186,6 +186,8 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
           <span style={{ color: "#3D1580" }}>S</span>
           <span style={{ color: "#C8952A" }}>S</span>
         </span>
+        <style>{`.tagline-nav { display: none; } @media (min-width: 501px) { .tagline-nav { display: inline; font-size: 11px; color: #7A5FAA; font-family: sans-serif; letter-spacing: 1.5px; line-height: 1; white-space: nowrap; } }`}</style>
+        <span className='tagline-nav'>KNOW THE SCAM BEFORE IT KNOWS YOU</span>
       </NavLink>
 
       {/* Quiz tab */}
