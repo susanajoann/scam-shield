@@ -472,7 +472,16 @@ export default function QuizScreen({
     // Only speak immediately if auto-read is off.
     // When auto-read is on, the useEffect watching showFeedback handles it
     // after a short delay — speaking here too would cause double-speaking.
-
+    if (!getAutoRead()) {
+      const correctOption = shuffledOptions.find((o) => o.correct);
+      speak(
+        buildFeedbackScript(
+          correct,
+          currentQuestion.explanation,
+          correctOption?.text ?? "",
+        ),
+      );
+    }
     await recordAnswer(sessionId, {
       scamId: currentScam.id,
       questionId: currentQuestion.id,
@@ -494,17 +503,24 @@ export default function QuizScreen({
     if (answersRevealed) return;
     const hardContent = currentScam.hard;
     const allFlags = hardContent.body.filter((s) => s.isFlag);
-    const correctHits = allFlags.filter((s) => highlighted[s.id]).length;
-    const falsePositives = hardContent.body.filter(
-      (s) => !s.isFlag && highlighted[s.id],
-    ).length;
+    const senderHit = hardContent.senderIsFlag && senderHighlighted ? 1 : 0;
+    const correctHits =
+      allFlags.filter((s) => highlighted[s.id]).length + senderHit;
+    const falsePositives =
+      hardContent.body.filter((s) => !s.isFlag && highlighted[s.id]).length +
+      (!hardContent.senderIsFlag && senderHighlighted ? 1 : 0);
     const score = Math.max(0, correctHits - falsePositives);
     const timeTaken = Math.round(
       (Date.now() - questionStartTime.current) / 1000,
     );
-    const missed = allFlags.length - correctHits;
+    const missed =
+      allFlags.length + (hardContent.senderIsFlag ? 1 : 0) - correctHits;
     setCurrentScamScore((s) => s + score);
     setAnswersRevealed(true);
+    // Only speak immediately if auto-read is off — same pattern as feedback
+    if (!getAutoRead()) {
+      speak(buildHardRevealScript(correctHits, allFlags.length, missed));
+    }
     for (const segment of hardContent.body) {
       if (!segment.isFlag) continue;
       await recordAnswer(sessionId, {
@@ -706,10 +722,13 @@ export default function QuizScreen({
   if (screen === "question" && isHardMode) {
     if (!currentScam) return null;
     const hardContent = currentScam.hard;
-    const totalFlags = hardContent.body.filter((s) => s.isFlag).length;
-    const foundSoFar = hardContent.body.filter(
-      (s) => s.isFlag && highlighted[s.id],
-    ).length;
+    // Count sender as a flag too if it is marked as one
+    const senderFlagCount = hardContent.senderIsFlag ? 1 : 0;
+    const totalFlags =
+      hardContent.body.filter((s) => s.isFlag).length + senderFlagCount;
+    const foundSoFar =
+      hardContent.body.filter((s) => s.isFlag && highlighted[s.id]).length +
+      (hardContent.senderIsFlag && senderHighlighted ? 1 : 0);
     return (
       <Wrapper onHome={onHome}>
         <ProgressBar
