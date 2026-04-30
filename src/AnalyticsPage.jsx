@@ -454,53 +454,88 @@ export default function AnalyticsPage({ readScriptRef }) {
 
       <Divider />
 
-      {/* ── Raw sessions table ── */}
-      <SectionTitle>Recent sessions</SectionTitle>
-      <p style={s.chartCaption}>Most recent 20 sessions.</p>
-      <div style={s.tableWrapper}>
-        <table style={s.table}>
-          <thead>
-            <tr>
-              {[
-                "Session ID",
-                "Age range",
-                "Difficulty",
-                "Completed",
-                "Total time (s)",
-              ].map((h) => (
-                <th key={h} style={s.th}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...sessions]
-              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-              .slice(0, 20)
-              .map((sess, i) => (
-                <tr
-                  key={i}
-                  style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}
-                >
-                  <td style={s.td}>{sess.session_id?.slice(0, 8)}…</td>
-                  <td style={s.td}>{sess.age_range ?? "—"}</td>
-                  <td style={s.td}>{sess.difficulty ?? "—"}</td>
-                  <td
-                    style={{
-                      ...s.td,
-                      color: sess.completed ? GREEN : RED,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {sess.completed ? "Yes" : "No"}
-                  </td>
-                  <td style={s.td}>{sess.total_time ?? "—"}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
+      {/* ── Leaderboard ── */}
+      <SectionTitle>
+        Leaderboard — fastest completions per difficulty
+      </SectionTitle>
+      <p style={s.chartCaption}>
+        Completed sessions only, ranked by total time. Ties broken by session
+        order.
+      </p>
+      {["easy", "medium", "hard"].map((diff) => {
+        const diffSessions = [...sessions]
+          .filter(
+            (s) => s.completed && s.total_time != null && s.difficulty === diff,
+          )
+          .sort((a, b) => a.total_time - b.total_time)
+          .slice(0, 10);
+
+        if (!diffSessions.length) return null;
+
+        const medals = ["🥇", "🥈", "🥉"];
+        const diffColor =
+          diff === "easy" ? GREEN : diff === "medium" ? ORANGE : RED;
+
+        return (
+          <div key={diff} style={{ marginBottom: 32 }}>
+            <p
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: diffColor,
+                fontFamily: "sans-serif",
+                margin: "0 0 10px",
+                textTransform: "capitalize",
+              }}
+            >
+              {diff.charAt(0).toUpperCase() + diff.slice(1)}
+            </p>
+            <div style={s.tableWrapper}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    {["Rank", "Age range", "Time (s)", "Finished"].map((h) => (
+                      <th key={h} style={s.th}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {diffSessions.map((sess, i) => (
+                    <tr
+                      key={i}
+                      style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}
+                    >
+                      <td
+                        style={{ ...s.td, fontWeight: 700, color: diffColor }}
+                      >
+                        {medals[i] ?? `#${i + 1}`}
+                      </td>
+                      <td style={s.td}>{sess.age_range ?? "—"}</td>
+                      <td style={{ ...s.td, fontWeight: 600 }}>
+                        {sess.total_time}s
+                      </td>
+                      <td style={s.td}>
+                        {sess.finished_at
+                          ? new Date(sess.finished_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
 
       <p style={s.footer}>
         All data is anonymous. No personal information is stored or displayed.
