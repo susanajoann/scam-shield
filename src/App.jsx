@@ -54,13 +54,14 @@ function saveAutoRead(value) {
 let _navLastText = "";
 let _navSpeaking = false;
 
-function navSpeak(text) {
+function navSpeak(text, onDone) {
   if (!window.speechSynthesis) return false;
-  // Toggle off if already speaking the same text
+  // Toggle off if already speaking
   if (_navSpeaking && _navLastText === text) {
     window.speechSynthesis.cancel();
     _navSpeaking = false;
     _navLastText = "";
+    onDone?.();
     return false; // now stopped
   }
   window.speechSynthesis.cancel();
@@ -82,6 +83,13 @@ function navSpeak(text) {
     const u = new SpeechSynthesisUtterance(chunk);
     u.rate = rate;
     u.pitch = 1;
+    // On the last chunk, fire onDone when it finishes
+    if (i === chunks.length - 1) {
+      u.onend = () => {
+        _navSpeaking = false;
+        onDone?.();
+      };
+    }
     if (i > 0) {
       const p = new SpeechSynthesisUtterance(" ");
       p.rate = 0.1;
@@ -90,14 +98,6 @@ function navSpeak(text) {
     }
     window.speechSynthesis.speak(u);
   });
-  // Reset speaking flag when done
-  window.speechSynthesis.addEventListener(
-    "end",
-    () => {
-      _navSpeaking = false;
-    },
-    { once: true },
-  );
   return true; // now speaking
 }
 
@@ -114,7 +114,7 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
   const handleSpeakBtn = () => {
     const script = readScriptRef?.current?.();
     if (!script) return;
-    const nowSpeaking = navSpeak(script);
+    const nowSpeaking = navSpeak(script, () => setIsSpeaking(false));
     setIsSpeaking(nowSpeaking);
   };
 
@@ -229,7 +229,7 @@ function NavBar({ onLogoClick, autoRead, setAutoRead, readScriptRef }) {
           color: isActive ? "#3D1580" : "#7A5FAA",
           textDecoration: "none",
           borderBottom: isActive
-            ? "3px solid #2D6A4F"
+            ? "3px solid #3D1580"
             : "3px solid transparent",
           transition: "color 0.15s, border-color 0.15s",
           whiteSpace: "nowrap",
