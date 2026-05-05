@@ -595,7 +595,7 @@ export default function AnalyticsPage({ readScriptRef }) {
                       key={age}
                       data={data}
                       shape={<CustomDot />}
-                      fill={AGE_COLORS[age] ?? "#888"}
+                      fill={DIFF_COLORS.easy}
                     />
                   ))}
                 </ScatterChart>
