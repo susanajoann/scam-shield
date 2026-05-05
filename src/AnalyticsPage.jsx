@@ -179,10 +179,10 @@ export default function AnalyticsPage({ readScriptRef }) {
       : 0;
     readScriptRef.current = () =>
       `Research Dashboard. Live data from Supabase. ` +
-      `Total answers recorded: ${totalAnswers}. ` +
-      `Total sessions: ${totalSessions}. ` +
-      `Completed sessions: ${completedSess}. ` +
-      `Overall accuracy: ${overallAccuracy} percent. ` +
+      `Total Answers Recorded: ${totalAnswers}. ` +
+      `Total Sessions: ${totalSessions}. ` +
+      `Completed Sessions: ${completedSess}. ` +
+      `Overall Accuracy: ${overallAccuracy} percent. ` +
       `Use the filters on screen to narrow results by difficulty or age range.`;
   }, [loading, answers.length, sessions.length]);
 
@@ -339,11 +339,11 @@ export default function AnalyticsPage({ readScriptRef }) {
 
       {/* ── Summary metrics ── */}
       <div style={s.metricsRow}>
-        <Metric label='Total answers' value={totalAnswers.toLocaleString()} />
-        <Metric label='Total sessions' value={totalSessions} />
-        <Metric label='Completed sessions' value={completedSess} />
+        <Metric label='Total Answers' value={totalAnswers.toLocaleString()} />
+        <Metric label='Total Sessions' value={totalSessions} />
+        <Metric label='Completed Sessions' value={completedSess} />
         <Metric
-          label='Overall accuracy'
+          label='Overall Accuracy'
           value={`${overallAccuracy}%`}
           color={accuracyColor(overallAccuracy)}
         />
@@ -724,11 +724,10 @@ export default function AnalyticsPage({ readScriptRef }) {
 
       {/* ── Leaderboard ── */}
       <SectionTitle>
-        Leaderboard — fastest completions per difficulty
+        Leaderboard — Fastest Accurate Completions Per Difficulty
       </SectionTitle>
       <p style={s.chartCaption}>
-        Completed sessions only. Ranked by highest accuracy, then fastest time
-        as a tiebreaker.
+        Completed sessions only. Ranked by highest accuracy then fastest time.
       </p>
       {["easy", "medium", "hard"].map((diff) => {
         // Pull directly from the Supabase view — already sorted by accuracy desc, time asc
@@ -818,7 +817,7 @@ export default function AnalyticsPage({ readScriptRef }) {
       <Divider />
 
       {/* ── Chart 1: Accuracy by scam type ── */}
-      <SectionTitle>Accuracy by scam type</SectionTitle>
+      <SectionTitle>Accuracy by Scam Type</SectionTitle>
       <p style={s.chartCaption}>
         Percentage of correct answers for each scam category. Sorted lowest to
         highest.
@@ -869,7 +868,7 @@ export default function AnalyticsPage({ readScriptRef }) {
       <Divider />
 
       {/* ── Chart 2: Accuracy by age range ── */}
-      <SectionTitle>Accuracy by age range</SectionTitle>
+      <SectionTitle>Accuracy by Age Range</SectionTitle>
       <p style={s.chartCaption}>
         Percentage of correct answers broken down by respondent age group.
       </p>
@@ -912,7 +911,7 @@ export default function AnalyticsPage({ readScriptRef }) {
       <Divider />
 
       {/* ── Chart 3: Avg time by scam ── */}
-      <SectionTitle>Average time per question by scam type</SectionTitle>
+      <SectionTitle>Average Time per Question by Scam Type</SectionTitle>
       <p style={s.chartCaption}>
         Longer times may indicate more difficult or confusing content.
       </p>
@@ -941,8 +940,9 @@ export default function AnalyticsPage({ readScriptRef }) {
       )}
 
       {/* ── Chart 4: Avg time by difficulty ── */}
-      <p style={s.chartCaption} id='diff-time'>
-        Average time per question by difficulty level.
+      <SectionTitle>Average Time per Question by Difficulty Level</SectionTitle>
+      <p style={s.chartCaption}>
+        Longer times may indicate more difficult or confusing content.
       </p>
       {diffData.length ? (
         <ResponsiveContainer width='100%' height={240}>
