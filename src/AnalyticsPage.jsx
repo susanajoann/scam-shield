@@ -350,12 +350,8 @@ export default function AnalyticsPage({ readScriptRef }) {
       </div>
 
       {/* ── Scatter plot: Time vs Accuracy per session ── */}
-      <SectionTitle>Time vs accuracy — all completed sessions</SectionTitle>
-      <p style={s.chartCaption}>
-        Each dot is one completed session. X axis = total time. Y axis =
-        accuracy %. Colour = age range. Shape = difficulty (○ easy, ◇ medium, △
-        hard).
-      </p>
+      <SectionTitle>Time vs Accuracy — All Completed Sessions</SectionTitle>
+      <p style={s.chartCaption}>Each dot is one completed session.</p>
       {(() => {
         // Build scatter data by joining sessions with answers
         const scatterData = sessions
@@ -532,7 +528,7 @@ export default function AnalyticsPage({ readScriptRef }) {
                     name='Time'
                     tickFormatter={(v) => formatTime(v)}
                     label={{
-                      value: "Time taken",
+                      value: "Time Taken",
                       position: "insideBottom",
                       offset: -16,
                       fontSize: 13,
@@ -726,6 +722,101 @@ export default function AnalyticsPage({ readScriptRef }) {
 
       <Divider />
 
+      {/* ── Leaderboard ── */}
+      <SectionTitle>
+        Leaderboard — fastest completions per difficulty
+      </SectionTitle>
+      <p style={s.chartCaption}>
+        Completed sessions only. Ranked by highest accuracy, then fastest time
+        as a tiebreaker.
+      </p>
+      {["easy", "medium", "hard"].map((diff) => {
+        // Pull directly from the Supabase view — already sorted by accuracy desc, time asc
+        const diffRows = leaderboard
+          .filter((r) => r.difficulty === diff)
+          .slice(0, 10);
+
+        if (!diffRows.length) return null;
+
+        const medals = ["🥇", "🥈", "🥉"];
+        const diffColor =
+          diff === "easy" ? GREEN : diff === "medium" ? ORANGE : RED;
+
+        return (
+          <div key={diff} style={{ marginBottom: 32 }}>
+            <p
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: diffColor,
+                fontFamily: "sans-serif",
+                margin: "0 0 10px",
+              }}
+            >
+              {diff.charAt(0).toUpperCase() + diff.slice(1)}
+            </p>
+            <div style={s.tableWrapper}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    {[
+                      "Rank",
+                      "Age range",
+                      "Accuracy",
+                      "Time (s)",
+                      "Finished",
+                    ].map((h) => (
+                      <th key={h} style={s.th}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {diffRows.map((row, i) => (
+                    <tr
+                      key={i}
+                      style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}
+                    >
+                      <td
+                        style={{ ...s.td, fontWeight: 700, color: diffColor }}
+                      >
+                        {medals[i] ?? `#${i + 1}`}
+                      </td>
+                      <td style={s.td}>{row.age_range ?? "—"}</td>
+                      <td
+                        style={{
+                          ...s.td,
+                          fontWeight: 600,
+                          color: accuracyColor(Number(row.accuracy_pct)),
+                        }}
+                      >
+                        {row.accuracy_pct}%
+                      </td>
+                      <td style={s.td}>{formatTime(row.total_time)}</td>
+                      <td style={s.td}>
+                        {row.finished_at_est
+                          ? new Date(row.finished_at_est).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+
+      <Divider />
+
       {/* ── Chart 1: Accuracy by scam type ── */}
       <SectionTitle>Accuracy by scam type</SectionTitle>
       <p style={s.chartCaption}>
@@ -877,101 +968,6 @@ export default function AnalyticsPage({ readScriptRef }) {
           </BarChart>
         </ResponsiveContainer>
       ) : null}
-
-      <Divider />
-
-      {/* ── Leaderboard ── */}
-      <SectionTitle>
-        Leaderboard — fastest completions per difficulty
-      </SectionTitle>
-      <p style={s.chartCaption}>
-        Completed sessions only. Ranked by highest accuracy, then fastest time
-        as a tiebreaker.
-      </p>
-      {["easy", "medium", "hard"].map((diff) => {
-        // Pull directly from the Supabase view — already sorted by accuracy desc, time asc
-        const diffRows = leaderboard
-          .filter((r) => r.difficulty === diff)
-          .slice(0, 3);
-
-        if (!diffRows.length) return null;
-
-        const medals = ["🥇", "🥈", "🥉"];
-        const diffColor =
-          diff === "easy" ? GREEN : diff === "medium" ? ORANGE : RED;
-
-        return (
-          <div key={diff} style={{ marginBottom: 32 }}>
-            <p
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: diffColor,
-                fontFamily: "sans-serif",
-                margin: "0 0 10px",
-              }}
-            >
-              {diff.charAt(0).toUpperCase() + diff.slice(1)}
-            </p>
-            <div style={s.tableWrapper}>
-              <table style={s.table}>
-                <thead>
-                  <tr>
-                    {[
-                      "Rank",
-                      "Age range",
-                      "Accuracy",
-                      "Time (s)",
-                      "Finished",
-                    ].map((h) => (
-                      <th key={h} style={s.th}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {diffRows.map((row, i) => (
-                    <tr
-                      key={i}
-                      style={{ background: i % 2 === 0 ? "#FAF7FF" : "#fff" }}
-                    >
-                      <td
-                        style={{ ...s.td, fontWeight: 700, color: diffColor }}
-                      >
-                        {medals[i] ?? `#${i + 1}`}
-                      </td>
-                      <td style={s.td}>{row.age_range ?? "—"}</td>
-                      <td
-                        style={{
-                          ...s.td,
-                          fontWeight: 600,
-                          color: accuracyColor(Number(row.accuracy_pct)),
-                        }}
-                      >
-                        {row.accuracy_pct}%
-                      </td>
-                      <td style={s.td}>{formatTime(row.total_time)}</td>
-                      <td style={s.td}>
-                        {row.finished_at_est
-                          ? new Date(row.finished_at_est).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      })}
 
       <p style={s.footer}>
         All data is anonymous. No personal information is stored or displayed.
