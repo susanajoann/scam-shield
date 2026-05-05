@@ -36,6 +36,17 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+// Format seconds into human readable time — handles seconds, minutes, and hours
+function formatTime(secs) {
+  if (!secs && secs !== 0) return "—";
+  if (secs < 60) return `${secs}s`;
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ${secs % 60}s`;
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return `${h}h ${m}m ${s}s`;
+}
+
 const SCAM_NAMES = {
   phishing: "Phishing & Spoofing",
   techsupport: "Tech Support",
@@ -55,22 +66,34 @@ const AGE_ORDER = [
   "75+",
 ];
 
-const AGE_COLORS = {
-  "Under 18": "#9B2335",
-  "18–24": "#B5621A",
-  "25–34": "#C8952A",
-  "35–44": "#2D6A4F",
-  "45–54": "#1A6B8A",
-  "55–64": "#3D1580",
-  "65–74": "#7A1A7A",
-  "75+": "#555555",
+// Difficulty colours
+const DIFF_COLORS = {
+  easy: "#2D6A4F", // green
+  medium: "#B5621A", // orange
+  hard: "#9B2335", // red
 };
 
-// Difficulty shapes rendered as custom dots
-const DIFF_SHAPES = {
-  easy: "circle",
-  medium: "diamond",
-  hard: "triangle",
+// Age range shapes — cycle through 8 distinct shapes
+const AGE_SHAPES = {
+  "Under 18": "circle",
+  "18–24": "diamond",
+  "25–34": "triangle",
+  "35–44": "square",
+  "45–54": "star",
+  "55–64": "cross",
+  "65–74": "pentagon",
+  "75+": "hexagon",
+};
+
+const AGE_SHAPE_SYMBOLS = {
+  circle: "○",
+  diamond: "◇",
+  triangle: "△",
+  square: "□",
+  star: "★",
+  cross: "+",
+  pentagon: "⬠",
+  hexagon: "⬡",
 };
 
 const PURPLE = "#3D1580";
@@ -326,6 +349,381 @@ export default function AnalyticsPage({ readScriptRef }) {
         />
       </div>
 
+      {/* ── Scatter plot: Time vs Accuracy per session ── */}
+      <SectionTitle>Time vs accuracy — all completed sessions</SectionTitle>
+      <p style={s.chartCaption}>
+        Each dot is one completed session. X axis = total time. Y axis =
+        accuracy %. Colour = age range. Shape = difficulty (○ easy, ◇ medium, △
+        hard).
+      </p>
+      {(() => {
+        // Build scatter data by joining sessions with answers
+        const scatterData = sessions
+          .filter((sess) => sess.completed && sess.total_time != null)
+          .map((sess) => {
+            const sessAnswers = answers.filter(
+              (a) => a.session_id === sess.session_id,
+            );
+            const total = sessAnswers.length;
+            const correct = sessAnswers.filter((a) => a.correct).length;
+            const accuracy =
+              total > 0 ? Math.round((correct / total) * 100) : 0;
+            return {
+              x: sess.total_time,
+              y: accuracy,
+              ageRange: sess.age_range ?? "Unknown",
+              difficulty: sess.difficulty ?? "easy",
+            };
+          });
+
+        if (!scatterData.length)
+          return <p style={s.empty}>No completed sessions yet.</p>;
+
+        // Group by age range for separate Scatter series (for legend + colour)
+        const byAge = {};
+        scatterData.forEach((d) => {
+          if (!byAge[d.ageRange]) byAge[d.ageRange] = [];
+          byAge[d.ageRange].push(d);
+        });
+
+        // Custom dot renderer — colour by difficulty, shape by age range
+        const CustomDot = (props) => {
+          const { cx, cy, payload } = props;
+          const color = DIFF_COLORS[payload.difficulty] ?? "#888";
+          const shape = AGE_SHAPES[payload.ageRange] ?? "circle";
+          const size = 7;
+          switch (shape) {
+            case "diamond":
+              return (
+                <polygon
+                  points={`${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+            case "triangle":
+              return (
+                <polygon
+                  points={`${cx},${cy - size} ${cx - size},${cy + size} ${cx + size},${cy + size}`}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+            case "square":
+              return (
+                <rect
+                  x={cx - size + 1}
+                  y={cy - size + 1}
+                  width={(size - 1) * 2}
+                  height={(size - 1) * 2}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+            case "star": {
+              const pts = Array.from({ length: 5 }, (_, i) => {
+                const a = ((i * 72 - 90) * Math.PI) / 180;
+                const a2 = ((i * 72 - 90 + 36) * Math.PI) / 180;
+                return `${cx + size * Math.cos(a)},${cy + size * Math.sin(a)} ${cx + size * 0.45 * Math.cos(a2)},${cy + size * 0.45 * Math.sin(a2)}`;
+              }).join(" ");
+              return (
+                <polygon
+                  points={pts}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+            }
+            case "cross":
+              return (
+                <g>
+                  <rect
+                    x={cx - size}
+                    y={cy - 2}
+                    width={size * 2}
+                    height={4}
+                    fill={color}
+                    fillOpacity={0.85}
+                  />
+                  <rect
+                    x={cx - 2}
+                    y={cy - size}
+                    width={4}
+                    height={size * 2}
+                    fill={color}
+                    fillOpacity={0.85}
+                  />
+                </g>
+              );
+            case "pentagon": {
+              const pts = Array.from({ length: 5 }, (_, i) => {
+                const a = ((i * 72 - 90) * Math.PI) / 180;
+                return `${cx + size * Math.cos(a)},${cy + size * Math.sin(a)}`;
+              }).join(" ");
+              return (
+                <polygon
+                  points={pts}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+            }
+            case "hexagon": {
+              const pts = Array.from({ length: 6 }, (_, i) => {
+                const a = (i * 60 * Math.PI) / 180;
+                return `${cx + size * Math.cos(a)},${cy + size * Math.sin(a)}`;
+              }).join(" ");
+              return (
+                <polygon
+                  points={pts}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+            }
+            default:
+              return (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={size - 1}
+                  fill={color}
+                  fillOpacity={0.85}
+                  stroke='#fff'
+                  strokeWidth={1}
+                />
+              );
+          }
+        };
+
+        // formatTime handles seconds, minutes, and hours
+
+        return (
+          <div
+            style={{
+              display: "flex",
+              gap: 20,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            {/* Chart */}
+            <div style={{ flex: "1 1 400px", minWidth: 0 }}>
+              <ResponsiveContainer width='100%' height={380}>
+                <ScatterChart
+                  margin={{ left: 10, right: 20, top: 10, bottom: 30 }}
+                >
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis
+                    type='number'
+                    dataKey='x'
+                    name='Time'
+                    tickFormatter={(v) => formatTime(v)}
+                    label={{
+                      value: "Time taken",
+                      position: "insideBottom",
+                      offset: -16,
+                      fontSize: 13,
+                    }}
+                    tick={s.axisTick}
+                  />
+                  <YAxis
+                    type='number'
+                    dataKey='y'
+                    name='Accuracy'
+                    domain={[0, 100]}
+                    tickFormatter={(v) => `${v}%`}
+                    tick={s.axisTick}
+                    label={{
+                      value: "Accuracy (%)",
+                      angle: -90,
+                      position: "insideLeft",
+                      fontSize: 13,
+                    }}
+                  />
+                  <ZAxis range={[60, 60]} />
+                  <Tooltip
+                    cursor={{ strokeDasharray: "3 3" }}
+                    content={({ payload }) => {
+                      if (!payload?.length) return null;
+                      const d = payload[0].payload;
+                      return (
+                        <div
+                          style={{
+                            background: "#fff",
+                            border: "1.5px solid #C9B8E8",
+                            borderRadius: 8,
+                            padding: "10px 14px",
+                            fontSize: 13,
+                            fontFamily: "sans-serif",
+                          }}
+                        >
+                          <p
+                            style={{
+                              margin: 0,
+                              fontWeight: 600,
+                              color: "#3D1580",
+                            }}
+                          >
+                            {d.ageRange}
+                          </p>
+                          <p style={{ margin: "4px 0 0" }}>
+                            Difficulty: {d.difficulty}
+                          </p>
+                          <p style={{ margin: "2px 0 0" }}>
+                            Time: {formatTime(d.x)}
+                          </p>
+                          <p style={{ margin: "2px 0 0" }}>Accuracy: {d.y}%</p>
+                        </div>
+                      );
+                    }}
+                  />
+                  {Object.entries(byAge).map(([age, data]) => (
+                    <Scatter
+                      key={age}
+                      data={data}
+                      shape={<CustomDot />}
+                      fill={AGE_COLORS[age] ?? "#888"}
+                    />
+                  ))}
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Side legend box */}
+            <div
+              style={{
+                flexShrink: 0,
+                background: "#FAF7FF",
+                border: "1.5px solid #C9B8E8",
+                borderRadius: 12,
+                padding: "16px 20px",
+                minWidth: 180,
+                fontFamily: "sans-serif",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#3D1580",
+                  margin: "0 0 12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
+                }}
+              >
+                Legend
+              </p>
+
+              {/* Difficulty colours */}
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#7A5FAA",
+                  margin: "0 0 6px",
+                }}
+              >
+                Difficulty (colour)
+              </p>
+              {[
+                { key: "easy", label: "Easy", color: DIFF_COLORS.easy },
+                { key: "medium", label: "Medium", color: DIFF_COLORS.medium },
+                { key: "hard", label: "Hard", color: DIFF_COLORS.hard },
+              ].map(({ key, label, color }) => {
+                const count = scatterData.filter(
+                  (d) => d.difficulty === key,
+                ).length;
+                return (
+                  <div
+                    key={key}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 5,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: "50%",
+                        background: color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontSize: 12, color: "#333", flex: 1 }}>
+                      {label}
+                    </span>
+                    <span style={{ fontSize: 11, color: "#999" }}>{count}</span>
+                  </div>
+                );
+              })}
+
+              {/* Age range shapes */}
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#7A5FAA",
+                  margin: "14px 0 6px",
+                }}
+              >
+                Age range (shape)
+              </p>
+              {Object.entries(byAge).map(([age, data]) => {
+                const symbol =
+                  AGE_SHAPE_SYMBOLS[AGE_SHAPES[age] ?? "circle"] ?? "○";
+                return (
+                  <div
+                    key={age}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 5,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 13,
+                        color: "#3D1580",
+                        width: 14,
+                        textAlign: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {symbol}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#333", flex: 1 }}>
+                      {age}
+                    </span>
+                    <span style={{ fontSize: 11, color: "#999" }}>
+                      {data.length}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      <Divider />
+
       <Divider />
 
       {/* ── Chart 1: Accuracy by scam type ── */}
@@ -482,171 +880,6 @@ export default function AnalyticsPage({ readScriptRef }) {
 
       <Divider />
 
-      {/* ── Scatter plot: Time vs Accuracy per session ── */}
-      <SectionTitle>Time vs accuracy — all completed sessions</SectionTitle>
-      <p style={s.chartCaption}>
-        Each dot is one completed session. X axis = total time in seconds. Y
-        axis = accuracy %. Colour = age range. Shape = difficulty (○ easy, ◇
-        medium, △ hard).
-      </p>
-      {(() => {
-        // Build scatter data by joining sessions with answers
-        const scatterData = sessions
-          .filter((sess) => sess.completed && sess.total_time != null)
-          .map((sess) => {
-            const sessAnswers = answers.filter(
-              (a) => a.session_id === sess.session_id,
-            );
-            const total = sessAnswers.length;
-            const correct = sessAnswers.filter((a) => a.correct).length;
-            const accuracy =
-              total > 0 ? Math.round((correct / total) * 100) : 0;
-            return {
-              x: sess.total_time,
-              y: accuracy,
-              ageRange: sess.age_range ?? "Unknown",
-              difficulty: sess.difficulty ?? "easy",
-            };
-          });
-
-        if (!scatterData.length)
-          return <p style={s.empty}>No completed sessions yet.</p>;
-
-        // Group by age range for separate Scatter series (for legend + colour)
-        const byAge = {};
-        scatterData.forEach((d) => {
-          if (!byAge[d.ageRange]) byAge[d.ageRange] = [];
-          byAge[d.ageRange].push(d);
-        });
-
-        // Custom dot renderer — shape by difficulty, colour by age range
-        const CustomDot = (props) => {
-          const { cx, cy, payload } = props;
-          const color = AGE_COLORS[payload.ageRange] ?? "#888";
-          const size = 8;
-          if (payload.difficulty === "hard") {
-            // Triangle
-            return (
-              <polygon
-                points={`${cx},${cy - size} ${cx - size},${cy + size} ${cx + size},${cy + size}`}
-                fill={color}
-                fillOpacity={0.85}
-                stroke='#fff'
-                strokeWidth={1}
-              />
-            );
-          }
-          if (payload.difficulty === "medium") {
-            // Diamond
-            return (
-              <polygon
-                points={`${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`}
-                fill={color}
-                fillOpacity={0.85}
-                stroke='#fff'
-                strokeWidth={1}
-              />
-            );
-          }
-          // Circle (easy)
-          return (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={size - 1}
-              fill={color}
-              fillOpacity={0.85}
-              stroke='#fff'
-              strokeWidth={1}
-            />
-          );
-        };
-
-        return (
-          <ResponsiveContainer width='100%' height={380}>
-            <ScatterChart margin={{ left: 10, right: 20, top: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis
-                type='number'
-                dataKey='x'
-                name='Time (s)'
-                label={{
-                  value: "Time (seconds)",
-                  position: "insideBottom",
-                  offset: -10,
-                  fontSize: 13,
-                }}
-                tick={s.axisTick}
-              />
-              <YAxis
-                type='number'
-                dataKey='y'
-                name='Accuracy'
-                domain={[0, 100]}
-                tickFormatter={(v) => `${v}%`}
-                tick={s.axisTick}
-                label={{
-                  value: "Accuracy (%)",
-                  angle: -90,
-                  position: "insideLeft",
-                  fontSize: 13,
-                }}
-              />
-              <ZAxis range={[60, 60]} />
-              <Tooltip
-                cursor={{ strokeDasharray: "3 3" }}
-                content={({ payload }) => {
-                  if (!payload?.length) return null;
-                  const d = payload[0].payload;
-                  return (
-                    <div
-                      style={{
-                        background: "#fff",
-                        border: "1.5px solid #C9B8E8",
-                        borderRadius: 8,
-                        padding: "10px 14px",
-                        fontSize: 13,
-                        fontFamily: "sans-serif",
-                      }}
-                    >
-                      <p
-                        style={{ margin: 0, fontWeight: 600, color: "#3D1580" }}
-                      >
-                        {d.ageRange}
-                      </p>
-                      <p style={{ margin: "4px 0 0" }}>
-                        Difficulty: {d.difficulty}
-                      </p>
-                      <p style={{ margin: "2px 0 0" }}>Time: {d.x}s</p>
-                      <p style={{ margin: "2px 0 0" }}>Accuracy: {d.y}%</p>
-                    </div>
-                  );
-                }}
-              />
-              <Legend
-                verticalAlign='top'
-                formatter={(value) => (
-                  <span style={{ fontSize: 12, fontFamily: "sans-serif" }}>
-                    {value}
-                  </span>
-                )}
-              />
-              {Object.entries(byAge).map(([age, data]) => (
-                <Scatter
-                  key={age}
-                  name={age}
-                  data={data}
-                  shape={<CustomDot />}
-                  fill={AGE_COLORS[age] ?? "#888"}
-                />
-              ))}
-            </ScatterChart>
-          </ResponsiveContainer>
-        );
-      })()}
-
-      <Divider />
-
       {/* ── Leaderboard ── */}
       <SectionTitle>
         Leaderboard — fastest completions per difficulty
@@ -684,13 +917,17 @@ export default function AnalyticsPage({ readScriptRef }) {
               <table style={s.table}>
                 <thead>
                   <tr>
-                    {["Rank", "Age range", "Accuracy", "Time", "Finished"].map(
-                      (h) => (
-                        <th key={h} style={s.th}>
-                          {h}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "Rank",
+                      "Age range",
+                      "Accuracy",
+                      "Time (s)",
+                      "Finished",
+                    ].map((h) => (
+                      <th key={h} style={s.th}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -714,11 +951,7 @@ export default function AnalyticsPage({ readScriptRef }) {
                       >
                         {row.accuracy_pct}%
                       </td>
-                      <td style={s.td}>
-                        {row.total_time < 60
-                          ? `${row.total_time}s`
-                          : `${Math.floor(row.total_time / 60)}m ${row.total_time % 60}s`}
-                      </td>
+                      <td style={s.td}>{formatTime(row.total_time)}</td>
                       <td style={s.td}>
                         {row.finished_at_est
                           ? new Date(row.finished_at_est).toLocaleDateString(
