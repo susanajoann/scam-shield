@@ -892,7 +892,7 @@ export default function AnalyticsPage({ readScriptRef }) {
         // Pull directly from the Supabase view — already sorted by accuracy desc, time asc
         const diffRows = leaderboard
           .filter((r) => r.difficulty === diff)
-          .slice(0, 10);
+          .slice(0, 3);
 
         if (!diffRows.length) return null;
 
