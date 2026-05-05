@@ -23,6 +23,10 @@ import {
   ResponsiveContainer,
   Cell,
   LabelList,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  Legend,
 } from "recharts";
 
 // ─── Supabase credentials (read from env) ────────────────────────────────────
@@ -50,6 +54,24 @@ const AGE_ORDER = [
   "65–74",
   "75+",
 ];
+
+const AGE_COLORS = {
+  "Under 18": "#9B2335",
+  "18–24": "#B5621A",
+  "25–34": "#C8952A",
+  "35–44": "#2D6A4F",
+  "45–54": "#1A6B8A",
+  "55–64": "#3D1580",
+  "65–74": "#7A1A7A",
+  "75+": "#555555",
+};
+
+// Difficulty shapes rendered as custom dots
+const DIFF_SHAPES = {
+  easy: "circle",
+  medium: "diamond",
+  hard: "triangle",
+};
 
 const PURPLE = "#3D1580";
 const GOLD = "#C8952A";
@@ -460,6 +482,171 @@ export default function AnalyticsPage({ readScriptRef }) {
 
       <Divider />
 
+      {/* ── Scatter plot: Time vs Accuracy per session ── */}
+      <SectionTitle>Time vs accuracy — all completed sessions</SectionTitle>
+      <p style={s.chartCaption}>
+        Each dot is one completed session. X axis = total time in seconds. Y
+        axis = accuracy %. Colour = age range. Shape = difficulty (○ easy, ◇
+        medium, △ hard).
+      </p>
+      {(() => {
+        // Build scatter data by joining sessions with answers
+        const scatterData = sessions
+          .filter((sess) => sess.completed && sess.total_time != null)
+          .map((sess) => {
+            const sessAnswers = answers.filter(
+              (a) => a.session_id === sess.session_id,
+            );
+            const total = sessAnswers.length;
+            const correct = sessAnswers.filter((a) => a.correct).length;
+            const accuracy =
+              total > 0 ? Math.round((correct / total) * 100) : 0;
+            return {
+              x: sess.total_time,
+              y: accuracy,
+              ageRange: sess.age_range ?? "Unknown",
+              difficulty: sess.difficulty ?? "easy",
+            };
+          });
+
+        if (!scatterData.length)
+          return <p style={s.empty}>No completed sessions yet.</p>;
+
+        // Group by age range for separate Scatter series (for legend + colour)
+        const byAge = {};
+        scatterData.forEach((d) => {
+          if (!byAge[d.ageRange]) byAge[d.ageRange] = [];
+          byAge[d.ageRange].push(d);
+        });
+
+        // Custom dot renderer — shape by difficulty, colour by age range
+        const CustomDot = (props) => {
+          const { cx, cy, payload } = props;
+          const color = AGE_COLORS[payload.ageRange] ?? "#888";
+          const size = 8;
+          if (payload.difficulty === "hard") {
+            // Triangle
+            return (
+              <polygon
+                points={`${cx},${cy - size} ${cx - size},${cy + size} ${cx + size},${cy + size}`}
+                fill={color}
+                fillOpacity={0.85}
+                stroke='#fff'
+                strokeWidth={1}
+              />
+            );
+          }
+          if (payload.difficulty === "medium") {
+            // Diamond
+            return (
+              <polygon
+                points={`${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`}
+                fill={color}
+                fillOpacity={0.85}
+                stroke='#fff'
+                strokeWidth={1}
+              />
+            );
+          }
+          // Circle (easy)
+          return (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={size - 1}
+              fill={color}
+              fillOpacity={0.85}
+              stroke='#fff'
+              strokeWidth={1}
+            />
+          );
+        };
+
+        return (
+          <ResponsiveContainer width='100%' height={380}>
+            <ScatterChart margin={{ left: 10, right: 20, top: 10, bottom: 20 }}>
+              <CartesianGrid strokeDasharray='3 3' />
+              <XAxis
+                type='number'
+                dataKey='x'
+                name='Time (s)'
+                label={{
+                  value: "Time (seconds)",
+                  position: "insideBottom",
+                  offset: -10,
+                  fontSize: 13,
+                }}
+                tick={s.axisTick}
+              />
+              <YAxis
+                type='number'
+                dataKey='y'
+                name='Accuracy'
+                domain={[0, 100]}
+                tickFormatter={(v) => `${v}%`}
+                tick={s.axisTick}
+                label={{
+                  value: "Accuracy (%)",
+                  angle: -90,
+                  position: "insideLeft",
+                  fontSize: 13,
+                }}
+              />
+              <ZAxis range={[60, 60]} />
+              <Tooltip
+                cursor={{ strokeDasharray: "3 3" }}
+                content={({ payload }) => {
+                  if (!payload?.length) return null;
+                  const d = payload[0].payload;
+                  return (
+                    <div
+                      style={{
+                        background: "#fff",
+                        border: "1.5px solid #C9B8E8",
+                        borderRadius: 8,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        fontFamily: "sans-serif",
+                      }}
+                    >
+                      <p
+                        style={{ margin: 0, fontWeight: 600, color: "#3D1580" }}
+                      >
+                        {d.ageRange}
+                      </p>
+                      <p style={{ margin: "4px 0 0" }}>
+                        Difficulty: {d.difficulty}
+                      </p>
+                      <p style={{ margin: "2px 0 0" }}>Time: {d.x}s</p>
+                      <p style={{ margin: "2px 0 0" }}>Accuracy: {d.y}%</p>
+                    </div>
+                  );
+                }}
+              />
+              <Legend
+                verticalAlign='top'
+                formatter={(value) => (
+                  <span style={{ fontSize: 12, fontFamily: "sans-serif" }}>
+                    {value}
+                  </span>
+                )}
+              />
+              {Object.entries(byAge).map(([age, data]) => (
+                <Scatter
+                  key={age}
+                  name={age}
+                  data={data}
+                  shape={<CustomDot />}
+                  fill={AGE_COLORS[age] ?? "#888"}
+                />
+              ))}
+            </ScatterChart>
+          </ResponsiveContainer>
+        );
+      })()}
+
+      <Divider />
+
       {/* ── Leaderboard ── */}
       <SectionTitle>
         Leaderboard — fastest completions per difficulty
@@ -472,7 +659,7 @@ export default function AnalyticsPage({ readScriptRef }) {
         // Pull directly from the Supabase view — already sorted by accuracy desc, time asc
         const diffRows = leaderboard
           .filter((r) => r.difficulty === diff)
-          .slice(0, 3);
+          .slice(0, 10);
 
         if (!diffRows.length) return null;
 
@@ -497,17 +684,13 @@ export default function AnalyticsPage({ readScriptRef }) {
               <table style={s.table}>
                 <thead>
                   <tr>
-                    {[
-                      "Rank",
-                      "Age range",
-                      "Accuracy",
-                      "Time (s)",
-                      "Finished",
-                    ].map((h) => (
-                      <th key={h} style={s.th}>
-                        {h}
-                      </th>
-                    ))}
+                    {["Rank", "Age range", "Accuracy", "Time", "Finished"].map(
+                      (h) => (
+                        <th key={h} style={s.th}>
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -531,7 +714,11 @@ export default function AnalyticsPage({ readScriptRef }) {
                       >
                         {row.accuracy_pct}%
                       </td>
-                      <td style={s.td}>{row.total_time}s</td>
+                      <td style={s.td}>
+                        {row.total_time < 60
+                          ? `${row.total_time}s`
+                          : `${Math.floor(row.total_time / 60)}m ${row.total_time % 60}s`}
+                      </td>
                       <td style={s.td}>
                         {row.finished_at_est
                           ? new Date(row.finished_at_est).toLocaleDateString(
