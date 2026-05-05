@@ -938,7 +938,7 @@ export default function AnalyticsPage({ readScriptRef }) {
       ) : (
         <p style={s.empty}>No time data for this filter.</p>
       )}
-
+      <Divider />
       {/* ── Chart 4: Avg time by difficulty ── */}
       <SectionTitle>Average Time per Question by Difficulty Level</SectionTitle>
       <p style={s.chartCaption}>
